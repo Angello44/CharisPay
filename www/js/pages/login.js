@@ -10,8 +10,9 @@ Router.register("login", {
     return `
             <div class="auth-page">
                 <div class="auth-logo">
+                    <div class="auth-logo-icon">${Icons.student}</div>
                     <h1>SPP Charis</h1>
-                    <p>Sistem Pembayaran SPP Charis Institute</p>
+                    <p>Portal Pembayaran SPP Charis Institute</p>
                 </div>
 
                 <div id="login-error" class="form-error" style="margin-bottom:12px"></div>
@@ -35,8 +36,8 @@ Router.register("login", {
                                    required
                                    style="padding-right:44px">
                             <span onclick="togglePassword('password', this)"
-                                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none">
-                                👁
+                                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-secondary);display:flex;align-items:center">
+                                ${Icons.eye}
                             </span>
                         </div>
                         <div class="form-hint">Password minimal 6 karakter</div>
@@ -104,9 +105,9 @@ function togglePassword(inputId, iconEl) {
   const input = document.getElementById(inputId);
   if (input.type === "password") {
     input.type = "text";
-    iconEl.textContent = "🙈";
+    iconEl.innerHTML = Icons.eyeOff;
   } else {
     input.type = "password";
-    iconEl.textContent = "👁";
+    iconEl.innerHTML = Icons.eye;
   }
 }

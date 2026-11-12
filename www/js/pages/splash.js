@@ -13,8 +13,9 @@ Router.register('splash', {
     render() {
         return `
             <div class="splash">
-                <div class="splash-logo">Charis</div>
-                <div class="splash-subtitle">Sistem Pembayaran SPP</div>
+                <div class="splash-icon">${Icons.student}</div>
+                <div class="splash-logo">SPP Charis</div>
+                <div class="splash-subtitle">Charis Institute &bull; Portal Orang Tua</div>
                 <div class="splash-spinner"></div>
             </div>
         `;

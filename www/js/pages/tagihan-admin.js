@@ -39,7 +39,7 @@ Router.register("tagihan-admin", {
 
                     <button class="btn btn-primary mb-8"
                             onclick="tutupModalPilihJenis(); showFormBulkTagihan()">
-                        📋 Semua Siswa (Bulk)
+                        ${Icons.students} Semua Siswa (Massal)
                         <span style="display:block;font-size:12px;font-weight:400;opacity:0.85">
                             Buat tagihan satu periode untuk semua siswa sekaligus
                         </span>
@@ -47,7 +47,7 @@ Router.register("tagihan-admin", {
 
                     <button class="btn btn-secondary mb-8"
                             onclick="tutupModalPilihJenis(); showFormTagihan()">
-                        👤 Satu Siswa
+                        ${Icons.student} Satu Siswa
                         <span style="display:block;font-size:12px;font-weight:400;opacity:0.75">
                             Buat tagihan untuk siswa tertentu saja
                         </span>
@@ -233,8 +233,8 @@ async function loadTagihanAdmin(filterStatus = "") {
     if (snap.empty) {
       Helpers.emptyState(
         "tagihan-admin-list",
-        "📄",
-        "Belum ada tagihan. Tap + untuk membuat.",
+        Icons.receipt,
+        "Belum ada data tagihan. Klik tambah untuk membuat.",
       );
       return;
     }
@@ -369,13 +369,13 @@ async function previewBulk() {
     previewEl.style.display = "block";
 
     if (totalSiswa === 0) {
-      previewText.innerHTML = `<span style="color:var(--danger)">⚠️ Tidak ada siswa${kelas ? " di kelas " + kelas : ""}</span>`;
+      previewText.innerHTML = `<span style="color:var(--danger)">Tidak ada siswa${kelas ? " di kelas " + kelas : ""}</span>`;
     } else {
       previewText.innerHTML = `
-                📋 Total siswa: <strong>${totalSiswa}</strong>${kelas ? " (kelas " + kelas + ")" : ""}<br>
-                ✅ Sudah ada tagihan: <strong>${sudahAda}</strong><br>
-                🆕 Akan dibuat: <strong style="color:var(--primary)">${akanDibuat} tagihan baru</strong>
-                ${sudahAda > 0 ? "<br><span style='color:var(--warning);font-size:12px'>⚠ Siswa yang sudah punya tagihan periode ini akan dilewati</span>" : ""}
+                Total siswa: <strong>${totalSiswa}</strong>${kelas ? " (kelas " + kelas + ")" : ""}<br>
+                Sudah ada tagihan: <strong>${sudahAda}</strong><br>
+                Akan dibuat: <strong style="color:var(--primary)">${akanDibuat} tagihan baru</strong>
+                ${sudahAda > 0 ? "<br><span style='color:var(--warning);font-size:12px'>Siswa yang sudah punya tagihan periode ini akan dilewati</span>" : ""}
             `;
     }
   } catch (err) {
@@ -488,9 +488,9 @@ async function buatTagihanBulk() {
 
   // Selesai
   if (gagal === 0) {
-    Router.toast(`✅ ${berhasil} tagihan berhasil dibuat`);
+    Router.toast(`${berhasil} tagihan berhasil dibuat`);
   } else {
-    Router.toast(`⚠️ ${berhasil} berhasil, ${gagal} gagal`);
+    Router.toast(`${berhasil} berhasil, ${gagal} gagal`);
   }
 
   tutupFormBulkTagihan();

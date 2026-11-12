@@ -13,7 +13,7 @@ Router.register("wali-kelas", {
   requireAuth: true,
   role: "admin",
   action: "showFormWali()",
-  actionIcon: "+",
+  actionIcon: Icons.plus,
 
   render() {
     return `
@@ -64,8 +64,8 @@ async function loadWaliKelas() {
     if (snap.empty) {
       Helpers.emptyState(
         "wali-list",
-        "👩‍🏫",
-        "Belum ada data wali kelas. Tap + untuk menambah.",
+        Icons.teacher,
+        "Belum ada data wali kelas. Klik tambah untuk menambah.",
       );
       _waliCached = [];
       return;
@@ -106,8 +106,8 @@ function renderWaliKelas(list) {
                     <div class="list-item-left">
                         <div class="list-item-title">${w.kelas}</div>
                         <div class="list-item-subtitle">
-                            👩‍🏫 ${w.namaWali || "-"}
-                            ${w.noHp ? " &middot; 📞 " + w.noHp : ""}
+                            ${w.namaWali || "-"}
+                            ${w.noHp ? " &bull; " + w.noHp : ""}
                         </div>
                     </div>
                     <div class="flex gap-8">

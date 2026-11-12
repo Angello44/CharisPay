@@ -1,207 +1,187 @@
 /* ============================================================
-   Halaman Panduan / Help Desk (Orang Tua)
-   ============================================================
-   Panduan cara pakai aplikasi untuk orang tua yang
-   kurang familiar dengan teknologi.
+   Halaman Panduan / Pusat Bantuan (Clean Vector UI)
    ============================================================ */
 
 Router.register("panduan", {
-    title: "Panduan Penggunaan",
-    back: true,
-    backTo: "dashboard-ortu",
-    nav: false,
-    requireAuth: true,
-    role: "ortu",
+  title: "Pusat Bantuan & Panduan",
+  back: true,
+  backTo: "dashboard-ortu",
+  nav: true,
+  requireAuth: true,
+  role: "ortu",
 
-    render() {
-        return `
-            <div class="card" style="background:var(--primary);color:white;text-align:center;padding:20px">
-                <div style="font-size:36px;margin-bottom:8px">📱</div>
-                <div style="font-size:16px;font-weight:600">Panduan Penggunaan</div>
-                <div style="font-size:13px;opacity:0.9;margin-top:4px">
-                    Aplikasi SPP Charis Institute
-                </div>
-            </div>
+  render() {
+    return `
+      <!-- Hero Header Bantuan -->
+      <div class="card" style="background:var(--hero-gradient);color:white;text-align:center;padding:22px;border:none">
+        <div class="empty-state-icon" style="background:rgba(255,255,255,0.2);color:white;margin-bottom:8px">
+          ${Icons.guide}
+        </div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-0.2px">Pusat Bantuan SPP</div>
+        <div style="font-size:13px;opacity:0.9;margin-top:4px">
+          Panduan praktis pembayaran untuk Orang Tua Siswa Charis Institute
+        </div>
+      </div>
 
-            <!-- Daftar isi -->
-            <div class="card">
-                <div class="card-title">Daftar Panduan</div>
-                <div class="list-item" onclick="scrollToPanduan('panduan-tagihan')" style="border-radius:8px">
-                    <div class="list-item-left">
-                        <div class="list-item-title">💳 Cara Melihat Tagihan SPP</div>
-                    </div>
-                    <span class="text-secondary">↓</span>
-                </div>
-                <div class="list-item" onclick="scrollToPanduan('panduan-bayar')" style="border-radius:8px">
-                    <div class="list-item-left">
-                        <div class="list-item-title">📤 Cara Membayar SPP</div>
-                    </div>
-                    <span class="text-secondary">↓</span>
-                </div>
-                <div class="list-item" onclick="scrollToPanduan('panduan-upload')" style="border-radius:8px">
-                    <div class="list-item-left">
-                        <div class="list-item-title">📷 Cara Upload Bukti Transfer</div>
-                    </div>
-                    <span class="text-secondary">↓</span>
-                </div>
-                <div class="list-item" onclick="scrollToPanduan('panduan-status')" style="border-radius:8px">
-                    <div class="list-item-left">
-                        <div class="list-item-title">🔍 Cara Cek Status Pembayaran</div>
-                    </div>
-                    <span class="text-secondary">↓</span>
-                </div>
-                <div class="list-item" onclick="scrollToPanduan('panduan-nilai')" style="border-radius:8px">
-                    <div class="list-item-left">
-                        <div class="list-item-title">📊 Cara Melihat Nilai Anak</div>
-                    </div>
-                    <span class="text-secondary">↓</span>
-                </div>
-                <div class="list-item" onclick="scrollToPanduan('panduan-riwayat')" style="border-radius:8px">
-                    <div class="list-item-left">
-                        <div class="list-item-title">📋 Cara Melihat Riwayat Pembayaran</div>
-                    </div>
-                    <span class="text-secondary">↓</span>
-                </div>
-            </div>
+      <!-- Navigasi Cepat Topik -->
+      <div class="card">
+        <div class="card-title">Topik Panduan</div>
+        <div class="list-item" onclick="scrollToPanduan('panduan-tagihan')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-blue">${Icons.wallet}</div>
+            <div class="list-item-title">Cara Melihat Tagihan SPP</div>
+          </div>
+          <span class="list-item-chevron">${Icons.chevronDown}</span>
+        </div>
+        <div class="list-item" onclick="scrollToPanduan('panduan-bayar')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-indigo">${Icons.receipt}</div>
+            <div class="list-item-title">Cara Melakukan Pembayaran</div>
+          </div>
+          <span class="list-item-chevron">${Icons.chevronDown}</span>
+        </div>
+        <div class="list-item" onclick="scrollToPanduan('panduan-upload')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-emerald">${Icons.camera}</div>
+            <div class="list-item-title">Cara Upload Bukti Transfer</div>
+          </div>
+          <span class="list-item-chevron">${Icons.chevronDown}</span>
+        </div>
+        <div class="list-item" onclick="scrollToPanduan('panduan-status')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-amber">${Icons.alertCircle}</div>
+            <div class="list-item-title">Memahami Arti Status Tagihan</div>
+          </div>
+          <span class="list-item-chevron">${Icons.chevronDown}</span>
+        </div>
+        <div class="list-item" onclick="scrollToPanduan('panduan-nilai')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-purple">${Icons.grade}</div>
+            <div class="list-item-title">Cara Memantau Nilai Rapor Anak</div>
+          </div>
+          <span class="list-item-chevron">${Icons.chevronDown}</span>
+        </div>
+      </div>
 
-            <!-- ===== 1. Tagihan ===== -->
-            <div id="panduan-tagihan" class="card">
-                <div class="card-title">💳 Cara Melihat Tagihan SPP</div>
-                ${langkah([
-                    { no:1, icon:"🏠", teks:"Buka aplikasi dan login menggunakan email dan password Anda." },
-                    { no:2, icon:"📄", teks:'Tap menu <strong>"Tagihan"</strong> di bagian bawah layar.' },
-                    { no:3, icon:"👀", teks:"Daftar tagihan SPP anak Anda akan muncul. Setiap tagihan menampilkan nama bulan, jumlah yang harus dibayar, dan statusnya." },
-                    { no:4, icon:"🔎", teks:"Tap salah satu tagihan untuk melihat detail lengkapnya." }
-                ])}
-                ${tipBox("💡 Tip", "Tagihan berwarna kuning artinya belum dibayar. Berwarna biru artinya sudah dikirim tapi menunggu konfirmasi. Berwarna hijau artinya sudah lunas.")}
-            </div>
+      <!-- 1. Tagihan -->
+      <div id="panduan-tagihan" class="card">
+        <div class="card-title">${Icons.wallet} Cara Melihat Tagihan SPP</div>
+        ${langkah([
+          { no: 1, teks: "Buka aplikasi SPP di ponsel Anda." },
+          { no: 2, teks: 'Pilih menu <strong>"Tagihan"</strong> pada bilah navigasi bawah.' },
+          { no: 3, teks: "Anda dapat melihat daftar seluruh tagihan per bulan, batas jatuh tempo, dan nominalnya." },
+          { no: 4, teks: "Ketuk salah satu tagihan untuk melihat rincian faktur lengkap." },
+        ])}
+        ${tipBox("Tips untuk Orang Tua", "Tagihan berwarna oranye menandakan belum dibayar. Tagihan berwarna hijau berarti telah lunas.")}
+      </div>
 
-            <!-- ===== 2. Cara Bayar ===== -->
-            <div id="panduan-bayar" class="card">
-                <div class="card-title">📤 Cara Membayar SPP</div>
-                <p class="text-sm text-secondary mb-16">Ada 2 cara membayar SPP:</p>
+      <!-- 2. Cara Bayar -->
+      <div id="panduan-bayar" class="card">
+        <div class="card-title">${Icons.receipt} Cara Melakukan Pembayaran</div>
+        <p class="text-sm text-secondary mb-16">Sekolah menyediakan 2 opsi pembayaran resmi:</p>
 
-                <div style="font-weight:600;margin-bottom:8px">🏦 Transfer Bank</div>
-                ${langkah([
-                    { no:1, icon:"📄", teks:'Buka tagihan yang belum dibayar, lalu tap tombol <strong>"Bayar Sekarang"</strong>.' },
-                    { no:2, icon:"🏦", teks:'Pilih metode <strong>"Transfer Bank"</strong>.' },
-                    { no:3, icon:"💸", teks:"Transfer uang ke rekening sekolah yang tertera di layar. Pastikan jumlahnya sesuai." },
-                    { no:4, icon:"📷", teks:"Foto atau simpan bukti transfer dari aplikasi bank Anda." },
-                    { no:5, icon:"📤", teks:'Tap area upload, pilih foto bukti transfer, lalu tap <strong>"Kirim Bukti Pembayaran"</strong>.' }
-                ])}
+        <div style="font-weight:700;margin-bottom:8px;color:var(--text)">Pilihan 1: Transfer Bank BCA</div>
+        ${langkah([
+          { no: 1, teks: 'Buka tagihan anak Anda, lalu klik tombol <strong>"Bayar Sekarang"</strong>.' },
+          { no: 2, teks: "Salin nomor rekening BCA sekolah dan nominal yang tertera." },
+          { no: 3, teks: "Buka m-Banking BCA atau ATM, lalu transfer sesuai nominal tepat." },
+          { no: 4, teks: "Simpan bukti transfer (struk atau screenshot)." },
+          { no: 5, teks: 'Upload bukti transfer tersebut, lalu klik <strong>"Kirim Bukti Pembayaran"</strong>.' },
+        ])}
 
-                <div style="font-weight:600;margin:16px 0 8px">💵 Tunai di Sekolah</div>
-                ${langkah([
-                    { no:1, icon:"🏫", teks:"Datang ke sekolah dan bayar langsung ke petugas keuangan." },
-                    { no:2, icon:"✅", teks:"Petugas akan mencatat pembayaran di aplikasi. Status tagihan akan berubah menjadi Lunas." }
-                ])}
-            </div>
+        <div style="font-weight:700;margin:18px 0 8px;color:var(--text)">Pilihan 2: Pembayaran Tunai di Sekolah</div>
+        ${langkah([
+          { no: 1, teks: "Datang langsung ke loket Bagian Keuangan Charis Institute." },
+          { no: 2, teks: "Lakukan pembayaran tunai ke kasir. Petugas akan mencatat dan memberikan kwitansi." },
+        ])}
+      </div>
 
-            <!-- ===== 3. Upload Bukti ===== -->
-            <div id="panduan-upload" class="card">
-                <div class="card-title">📷 Cara Upload Bukti Transfer</div>
-                ${langkah([
-                    { no:1, icon:"📱", teks:"Buka aplikasi bank atau dompet digital Anda, lalu ambil screenshot atau foto bukti transfer." },
-                    { no:2, icon:"📲", teks:'Di aplikasi SPP, buka tagihan → tap <strong>"Bayar Sekarang"</strong> → pilih Transfer Bank.' },
-                    { no:3, icon:"🖼️", teks:'Tap area bertuliskan <strong>"Tap untuk pilih foto/file"</strong>.' },
-                    { no:4, icon:"🔍", teks:"Pilih foto bukti transfer dari galeri HP Anda. Foto akan muncul sebagai preview." },
-                    { no:5, icon:"✉️", teks:'Tap <strong>"Kirim Bukti Pembayaran"</strong>. Tunggu hingga muncul pesan berhasil.' }
-                ])}
-                ${tipBox("⚠️ Perhatian",
-                    "Pastikan foto bukti transfer jelas dan tidak buram. Ukuran file maksimal 5MB. Format yang diterima: JPG, PNG, atau PDF."
-                )}
-            </div>
+      <!-- 3. Upload Bukti -->
+      <div id="panduan-upload" class="card">
+        <div class="card-title">${Icons.camera} Cara Upload Bukti Transfer</div>
+        ${langkah([
+          { no: 1, teks: "Pastikan foto bukti transfer atau screenshot struk jelas dan nominal terbaca." },
+          { no: 2, teks: 'Ketuk area <strong>"Pilih Foto Bukti Transfer"</strong> pada formulir.' },
+          { no: 3, teks: "Pilih foto dari Galeri HP Anda. Preview foto akan langsung muncul." },
+          { no: 4, teks: 'Ketuk <strong>"Kirim Bukti Pembayaran"</strong> dan tunggu hingga muncul notifikasi berhasil.' },
+        ])}
+        ${tipBox("Catatan Penting", "Ukuran foto maksimal 5MB. Format yang didukung: JPG, PNG, atau PDF.")}
+      </div>
 
-            <!-- ===== 4. Cek Status ===== -->
-            <div id="panduan-status" class="card">
-                <div class="card-title">🔍 Cara Cek Status Pembayaran</div>
-                ${langkah([
-                    { no:1, icon:"📄", teks:'Buka menu <strong>"Tagihan"</strong> atau <strong>"Riwayat"</strong>.' },
-                    { no:2, icon:"🔍", teks:"Lihat label berwarna di sebelah kanan setiap tagihan:" }
-                ])}
-                <div style="margin:12px 0">
-                    ${statusRow("badge-belum",    "Belum Dibayar",       "Tagihan belum dibayar")}
-                    ${statusRow("badge-menunggu", "Menunggu Verifikasi", "Bukti transfer sudah dikirim, menunggu dicek admin")}
-                    ${statusRow("badge-lunas",    "Lunas",               "Pembayaran sudah dikonfirmasi")}
-                    ${statusRow("badge-revisi",   "Perlu Revisi",        "Bukti transfer perlu diperbaiki, cek catatan dari admin")}
-                    ${statusRow("badge-ditolak",  "Ditolak",             "Pembayaran ditolak, hubungi admin")}
-                </div>
-            </div>
+      <!-- 4. Arti Status -->
+      <div id="panduan-status" class="card">
+        <div class="card-title">${Icons.alertCircle} Memahami Arti Status Tagihan</div>
+        <div style="margin:12px 0">
+          ${statusRow("badge-belum", "Belum Dibayar", "Tagihan belum dibayar. Harap segera diselesaikan.")}
+          ${statusRow("badge-menunggu", "Menunggu Verifikasi", "Bukti sudah dikirim, petugas sedang memeriksa data.")}
+          ${statusRow("badge-lunas", "Lunas", "Pembayaran sah & telah dicatat resmi oleh sekolah.")}
+          ${statusRow("badge-revisi", "Perlu Revisi", "Bukti transfer belum jelas. Silakan upload ulang.")}
+          ${statusRow("badge-ditolak", "Ditolak", "Pembayaran tidak valid. Hubungi bagian keuangan.")}
+        </div>
+      </div>
 
-            <!-- ===== 5. Nilai ===== -->
-            <div id="panduan-nilai" class="card">
-                <div class="card-title">📊 Cara Melihat Nilai Anak</div>
-                ${langkah([
-                    { no:1, icon:"🏠", teks:'Di halaman Beranda, tap tombol <strong>"Nilai Anak"</strong>.' },
-                    { no:2, icon:"📊", teks:"Nilai rata-rata akhir kelas sebelumnya akan muncul untuk setiap anak." },
-                    { no:3, icon:"ℹ️", teks:"Nilai baru akan muncul setelah anak naik ke kelas berikutnya dan admin sudah menginput nilai." }
-                ])}
-                ${tipBox("📝 Catatan", "Nilai yang ditampilkan adalah nilai rata-rata akhir dari kelas yang sudah selesai. Misalnya jika anak sekarang di kelas SD 2, nilai yang tampil adalah nilai akhir kelas SD 1.")}
-            </div>
+      <!-- 5. Nilai Anak -->
+      <div id="panduan-nilai" class="card">
+        <div class="card-title">${Icons.grade} Cara Memantau Nilai Rapor Anak</div>
+        ${langkah([
+          { no: 1, teks: 'Pada Beranda aplikasi, ketuk menu <strong>"Nilai Rapor"</strong>.' },
+          { no: 2, teks: "Nilai rata-rata rapor anak dari kelas sebelumnya akan ditampilkan lengkap dengan predikat dan nama wali kelas." },
+        ])}
+      </div>
 
-            <!-- ===== 6. Riwayat ===== -->
-            <div id="panduan-riwayat" class="card">
-                <div class="card-title">📋 Cara Melihat Riwayat Pembayaran</div>
-                ${langkah([
-                    { no:1, icon:"🕐", teks:'Tap menu <strong>"Riwayat"</strong> di bagian bawah layar.' },
-                    { no:2, icon:"📋", teks:"Semua transaksi pembayaran yang pernah dilakukan akan tampil di sini, dari yang terbaru." },
-                    { no:3, icon:"🔎", teks:"Tap salah satu transaksi untuk melihat detail, termasuk bukti transfer yang pernah dikirim." }
-                ])}
-            </div>
+      <!-- Kontak Petugas Sekolah -->
+      <div class="card" style="background:#eff6ff;border-color:#bfdbfe;text-align:center;padding:20px">
+        <div class="empty-state-icon" style="color:var(--primary);background:white;margin-bottom:8px">${Icons.chat}</div>
+        <div class="font-bold text-sm" style="color:var(--primary-dark)">Butuh Bantuan Langsung?</div>
+        <p class="text-xs text-secondary mt-4 mb-12">
+          Petugas keuangan kami siap membantu Anda melalui chat WhatsApp pada hari kerja.
+        </p>
+        <button class="btn btn-success" onclick="window.open('https://wa.me/6281234567890?text=Halo%20Admin%20Keuangan%20Charis%20Institute%2C%20saya%20orang%20tua%20siswa%20membutuhkan%20bantuan%20seputar%20pembayaran%20SPP.', '_blank')">
+          ${Icons.chat} Hubungi Petugas Keuangan via WhatsApp
+        </button>
+      </div>
+    `;
+  },
 
-            <!-- Kontak -->
-            <div class="card" style="background:var(--primary-light);text-align:center">
-                <div style="font-size:24px;margin-bottom:8px">📞</div>
-                <div class="font-semibold mb-8">Masih bingung?</div>
-                <p class="text-sm text-secondary">
-                    Hubungi petugas keuangan sekolah atau datang langsung ke sekolah untuk mendapat bantuan.
-                </p>
-            </div>
-        `;
-    },
-
-    init() {
-        // Tidak ada init khusus
-    }
+  init() {},
 });
 
-/** Render langkah-langkah panduan */
 function langkah(steps) {
-    return steps.map(s => `
-        <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">
-            <div style="min-width:28px;height:28px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">
-                ${s.no}
-            </div>
-            <div style="padding-top:4px">
-                <span style="margin-right:6px">${s.icon}</span>
-                <span class="text-sm">${s.teks}</span>
-            </div>
+  return steps
+    .map(
+      (s) => `
+      <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">
+        <div style="min-width:24px;height:24px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">
+          ${s.no}
         </div>
-    `).join("");
+        <div style="padding-top:2px">
+          <span class="text-sm">${s.teks}</span>
+        </div>
+      </div>
+    `
+    )
+    .join("");
 }
 
-/** Render tip/catatan box */
 function tipBox(judul, isi) {
-    return `
-        <div style="background:var(--warning-light);border-radius:8px;padding:12px;margin-top:12px">
-            <div class="text-sm font-semibold" style="color:var(--warning);margin-bottom:4px">${judul}</div>
-            <p class="text-sm" style="color:var(--warning)">${isi}</p>
-        </div>
-    `;
+  return `
+    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:var(--radius-sm);padding:12px;margin-top:12px">
+      <div class="text-xs font-bold" style="color:#b45309;margin-bottom:2px">${judul}</div>
+      <p class="text-xs" style="color:#92400e;line-height:1.4">${isi}</p>
+    </div>
+  `;
 }
 
-/** Render baris status */
 function statusRow(cls, label, deskripsi) {
-    return `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <span class="badge ${cls}" style="min-width:120px;text-align:center">${label}</span>
-            <span class="text-sm text-secondary">${deskripsi}</span>
-        </div>
-    `;
+  return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span class="badge ${cls}" style="min-width:130px;justify-content:center">${label}</span>
+      <span class="text-xs text-secondary">${deskripsi}</span>
+    </div>
+  `;
 }
 
-/** Scroll ke section panduan */
 function scrollToPanduan(id) {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }

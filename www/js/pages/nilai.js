@@ -84,7 +84,7 @@ async function loadNilaiAdmin(filterKelas = "") {
         const siswaSnap = await query.get();
 
         if (siswaSnap.empty) {
-            Helpers.emptyState("nilai-admin-list", "👨‍🎓", "Tidak ada siswa" + (filterKelas ? " di kelas " + filterKelas : ""));
+            Helpers.emptyState("nilai-admin-list", Icons.students, "Tidak ada data siswa" + (filterKelas ? " di kelas " + filterKelas : ""));
             return;
         }
 
@@ -111,7 +111,7 @@ async function loadNilaiAdmin(filterKelas = "") {
                         <div class="list-item-title">${s.nama}</div>
                         <div class="list-item-subtitle">${s.kelas} &middot; NIS: ${s.nis || "-"}</div>
                         ${nilaiAda
-                            ? `<div class="text-sm" style="color:var(--success)">✓ Nilai ${kelasLama}: <strong>${nilaiAda.nilaiRataRata}</strong></div>`
+                            ? `<div class="text-sm" style="color:var(--success)">Nilai ${kelasLama}: <strong>${nilaiAda.nilaiRataRata}</strong></div>`
                             : (kelasLama
                                 ? `<div class="text-sm text-secondary">Belum ada nilai untuk kelas ${kelasLama}</div>`
                                 : `<div class="text-sm text-secondary">Kelas pertama — belum ada nilai sebelumnya</div>`)
@@ -216,7 +216,7 @@ async function loadNilaiOrtu() {
         const siswaList = await getSiswaOrtu();
 
         if (siswaList.length === 0) {
-            Helpers.emptyState("nilai-ortu-content", "📊", "Data siswa belum terhubung. Hubungi admin sekolah.");
+            Helpers.emptyState("nilai-ortu-content", Icons.grade, "Data siswa belum terhubung. Hubungi admin sekolah.");
             return;
         }
 
@@ -230,10 +230,10 @@ async function loadNilaiOrtu() {
 
             html += `
                 <div class="card">
-                    <div class="card-title">📚 ${siswa.nama}</div>
+                    <div class="card-title">${Icons.student} ${siswa.nama}</div>
                     <div class="card-row">
                         <span class="card-label">Kelas Sekarang</span>
-                        <span class="card-value">${siswa.kelas}</span>
+                        <span class="card-value font-bold">${siswa.kelas}</span>
                     </div>
                     <div class="card-row">
                         <span class="card-label">Wali Kelas</span>
@@ -241,17 +241,17 @@ async function loadNilaiOrtu() {
                     </div>
                     ${wali && wali.noHp ? `
                     <div class="card-row">
-                        <span class="card-label">No. HP Wali</span>
-                        <span class="card-value">${wali.noHp}</span>
+                        <span class="card-label">Kontak Wali</span>
+                        <span class="card-value font-semibold">${wali.noHp}</span>
                     </div>` : ""}
                 </div>
             `;
 
             if (!kelasLama) {
                 html += `
-                    <div class="card" style="background:var(--warning-light)">
-                        <p class="text-sm" style="color:var(--warning)">
-                            ${siswa.nama} masih di kelas pertama (${siswa.kelas}). Nilai akan muncul setelah naik kelas.
+                    <div class="card" style="background:var(--warning-light);border-color:var(--warning-border)">
+                        <p class="text-sm" style="color:var(--warning-dark)">
+                            ${siswa.nama} masih di kelas pertama (${siswa.kelas}). Nilai akan muncul setelah kenaikan kelas.
                         </p>
                     </div>
                 `;
@@ -267,8 +267,8 @@ async function loadNilaiOrtu() {
             if (nilaiSnap.empty) {
                 html += `
                     <div class="card">
-                        <div class="card-title">📊 Nilai Kelas ${kelasLama}</div>
-                        <p class="text-sm text-secondary">Nilai belum diinput oleh admin.</p>
+                        <div class="card-title">Nilai Rapor Kelas ${kelasLama}</div>
+                        <p class="text-sm text-secondary">Nilai belum diinput oleh pihak sekolah.</p>
                     </div>
                 `;
             } else {
@@ -277,7 +277,7 @@ async function loadNilaiOrtu() {
 
                 html += `
                     <div class="card">
-                        <div class="card-title">📊 Nilai Kelas ${kelasLama}</div>
+                        <div class="card-title">Nilai Rapor Kelas ${kelasLama}</div>
                         <div class="card-row">
                             <span class="card-label">Tahun Ajaran</span>
                             <span class="card-value">${n.tahunAjaran || "-"}</span>

@@ -127,23 +127,23 @@ async function loadLaporan() {
             <div class="card">
                 <div class="card-title">Status Tagihan</div>
                 <div class="card-row">
-                    <span class="card-label">✅ Lunas</span>
+                    <span class="card-label">Sudah Lunas</span>
                     <span class="card-value" style="color:var(--success)">${counts.lunas} tagihan</span>
                 </div>
                 <div class="card-row">
-                    <span class="card-label">⏳ Belum Dibayar</span>
+                    <span class="card-label">Belum Dibayar</span>
                     <span class="card-value" style="color:var(--warning)">${counts.belum} tagihan</span>
                 </div>
                 <div class="card-row">
-                    <span class="card-label">🔍 Menunggu Verifikasi</span>
+                    <span class="card-label">Menunggu Verifikasi</span>
                     <span class="card-value" style="color:var(--info)">${counts.menunggu} tagihan</span>
                 </div>
                 <div class="card-row">
-                    <span class="card-label">⚠️ Perlu Revisi</span>
+                    <span class="card-label">Perlu Revisi</span>
                     <span class="card-value" style="color:var(--warning)">${counts.revisi} tagihan</span>
                 </div>
                 <div class="card-row">
-                    <span class="card-label">❌ Ditolak</span>
+                    <span class="card-label">Ditolak</span>
                     <span class="card-value" style="color:var(--danger)">${counts.ditolak} tagihan</span>
                 </div>
             </div>
@@ -151,11 +151,11 @@ async function loadLaporan() {
             <div class="card">
                 <div class="card-title">Berdasarkan Metode Pembayaran</div>
                 <div class="card-row">
-                    <span class="card-label">🏦 Transfer Bank</span>
+                    <span class="card-label">Transfer Bank</span>
                     <span class="card-value">${Helpers.rupiah(totalTransfer)}</span>
                 </div>
                 <div class="card-row">
-                    <span class="card-label">💵 Tunai</span>
+                    <span class="card-label">Tunai di Sekolah</span>
                     <span class="card-value">${Helpers.rupiah(totalTunai)}</span>
                 </div>
             </div>

@@ -93,7 +93,7 @@ const Router = {
         // Tombol back
         if (route.back) {
             const backTo = route.backTo || (Auth.hasRole('admin') ? 'dashboard-admin' : 'dashboard-ortu');
-            html += `<div class="header-back" onclick="Router.go('${backTo}')">&#8592;</div>`;
+            html += `<div class="header-back" onclick="Router.go('${backTo}')">${Icons.arrowLeft}</div>`;
         }
 
         // Judul
@@ -101,7 +101,7 @@ const Router = {
 
         // Aksi kanan (opsional)
         if (route.action) {
-            html += `<div class="header-action" onclick="${route.action}">${route.actionIcon || '&#8942;'}</div>`;
+            html += `<div class="header-action" onclick="${route.action}">${route.actionIcon || Icons.logout}</div>`;
         }
 
         header.innerHTML = html;
@@ -164,12 +164,17 @@ const NAV_ITEMS = {
         {
             route: 'tagihan',
             label: 'Tagihan',
-            icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>'
+            icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>'
         },
         {
             route: 'riwayat',
             label: 'Riwayat',
             icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>'
+        },
+        {
+            route: 'panduan',
+            label: 'Bantuan',
+            icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>'
         }
     ],
     admin: [

@@ -11,7 +11,8 @@
       http-equiv="Content-Security-Policy"
       content="
         default-src 'self' data: https://ssl.gstatic.com https://www.gstatic.com 'unsafe-eval' 'unsafe-inline';
-        style-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com data:;
         img-src 'self' data: content: blob: https://*.googleusercontent.com https://*.firebasestorage.app;
         connect-src 'self' http://localhost:* http://127.0.0.1:* https://www.gstatic.com https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebasestorage.app;
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://ssl.gstatic.com;
@@ -21,9 +22,16 @@
     <meta name="msapplication-tap-highlight" content="no" />
     <meta
       name="viewport"
-      content="initial-scale=1, width=device-width, viewport-fit=cover"
+      content="initial-scale=1, width=device-width, viewport-fit=cover, user-scalable=no"
     />
     <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#1e40af" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="css/style.css" />
     <title>SPP Charis Institute</title>
   </head>

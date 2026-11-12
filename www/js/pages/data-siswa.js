@@ -8,12 +8,12 @@ Router.register("data-siswa", {
   requireAuth: true,
   role: "admin",
   action: "showFormSiswa()",
-  actionIcon: "+",
+  actionIcon: Icons.plus,
 
   render() {
     return `
       <div class="form-group">
-        <input type="text" id="search-siswa" placeholder="🔍 Cari nama siswa atau NIS...">
+        <input type="text" id="search-siswa" placeholder="Cari nama siswa atau NIS...">
       </div>
       <div id="siswa-list"><div class="loading">Memuat data siswa...</div></div>
 
@@ -96,8 +96,8 @@ async function loadDaftarSiswa() {
     if (snap.empty) {
       Helpers.emptyState(
         "siswa-list",
-        "👨‍🎓",
-        "Belum ada data siswa. Tap + untuk menambah.",
+        Icons.students,
+        "Belum ada data siswa. Klik tambah untuk membuat data baru.",
       );
       _siswaCached = [];
       return;
@@ -116,15 +116,15 @@ function renderDaftarSiswa(list) {
   if (!container) return;
 
   if (list.length === 0) {
-    Helpers.emptyState("siswa-list", "🔍", "Tidak ada siswa yang cocok");
+    Helpers.emptyState("siswa-list", Icons.search, "Tidak ada data siswa yang cocok");
     return;
   }
 
   container.innerHTML = list
     .map((s) => {
       const ortuInfo = s.ortuNama
-        ? `<span style="color:var(--success);font-size:11px">✓ ${s.ortuNama}</span>`
-        : `<span style="color:var(--warning);font-size:11px">⚠ Belum terhubung ke ortu</span>`;
+        ? `<span style="color:var(--success);font-size:11.5px">Wali: ${s.ortuNama}</span>`
+        : `<span style="color:var(--warning);font-size:11.5px">Belum terhubung ke ortu</span>`;
 
       return `
       <div class="list-item">
@@ -235,7 +235,7 @@ async function cariAkunOrtu() {
         .where("email", "==", email)
         .get();
       if (snap2.empty) {
-        resultEl.innerHTML = `<div class="text-sm" style="color:var(--danger)">❌ Akun dengan email ini tidak ditemukan. Pastikan orang tua sudah mendaftar.</div>`;
+        resultEl.innerHTML = `<div class="text-sm" style="color:var(--danger)">Akun dengan email ini tidak ditemukan. Pastikan orang tua sudah mendaftar.</div>`;
         document.getElementById("siswa-ortu-id").value = "";
         document.getElementById("siswa-ortu-nama").value = "";
         return;
@@ -262,10 +262,10 @@ function renderOrtuFound(user) {
   return `
     <div style="background:var(--success-light);padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div class="text-sm font-semibold" style="color:var(--success)">✓ Akun ditemukan</div>
+        <div class="text-sm font-semibold" style="color:var(--success)">Akun ditemukan</div>
         <div class="text-sm">${user.nama || "-"} &middot; ${user.email || ""}</div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="hapusLinkOrtu()">✕</button>
+      <button class="btn btn-danger btn-sm" onclick="hapusLinkOrtu()">${Icons.cross}</button>
     </div>
   `;
 }
@@ -404,7 +404,6 @@ async function hapusSiswa(id, nama) {
         });
       }
     }
-    }
 
     await db.collection("siswa").doc(id).delete();
     Router.toast("Siswa berhasil dihapus");
@@ -423,10 +422,10 @@ async function onKelasChange(kelas) {
   infoEl.textContent = "Mencari wali kelas...";
   const wali = await getWaliByKelas(kelas);
   if (wali) {
-    infoEl.innerHTML = `👩‍🏫 Wali Kelas: <strong>${wali.namaWali}</strong>${wali.noHp ? " &middot; 📞 " + wali.noHp : ""}`;
+    infoEl.innerHTML = `Wali Kelas: <strong>${wali.namaWali}</strong>${wali.noHp ? " &middot; " + wali.noHp : ""}`;
     infoEl.style.color = "var(--success)";
   } else {
-    infoEl.textContent = "⚠ Wali kelas belum diatur untuk kelas ini";
+    infoEl.textContent = "Wali kelas belum diatur untuk kelas ini";
     infoEl.style.color = "var(--warning)";
   }
 }

@@ -10,8 +10,9 @@ Router.register("register", {
     return `
             <div class="auth-page">
                 <div class="auth-logo">
-                    <h1>Daftar Akun</h1>
-                    <p>Buat akun orang tua / wali siswa</p>
+                    <div class="auth-logo-icon">${Icons.student}</div>
+                    <h1>Daftar Akun Baru</h1>
+                    <p>Portal Orang Tua / Wali Murid</p>
                 </div>
 
                 <div id="register-error" class="form-error" style="margin-bottom:12px"></div>
@@ -56,8 +57,8 @@ Router.register("register", {
                                    required minlength="6"
                                    style="padding-right:44px">
                             <span onclick="togglePassword('password', this)"
-                                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none">
-                                👁
+                                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-secondary);display:flex;align-items:center">
+                                ${Icons.eye}
                             </span>
                         </div>
                         <div class="form-hint">Minimal 6 karakter, campuran huruf dan angka lebih aman</div>
@@ -73,15 +74,16 @@ Router.register("register", {
                                    required
                                    style="padding-right:44px">
                             <span onclick="togglePassword('konfirmasi-password', this)"
-                                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none">
-                                👁
+                                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-secondary);display:flex;align-items:center">
+                                ${Icons.eye}
                             </span>
                         </div>
                     </div>
 
                     <div class="card" style="background:var(--primary-light);margin-bottom:16px">
-                        <p class="text-sm" style="color:var(--primary)">
-                            ℹ️ Setelah daftar, tambahkan data anak Anda di halaman utama menggunakan <strong>Nama</strong> atau <strong>NIS</strong> anak.
+                        <p class="text-sm" style="color:var(--primary);display:flex;align-items:flex-start;gap:8px">
+                            <span style="flex-shrink:0">${Icons.alertCircle}</span>
+                            <span>Setelah mendaftar, tambahkan data anak Anda di halaman utama menggunakan <strong>Nama</strong> atau <strong>NIS</strong> anak.</span>
                         </p>
                     </div>
 
