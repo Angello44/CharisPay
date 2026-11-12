@@ -12,13 +12,18 @@ Router.register("dashboard-ortu", {
 
   render() {
     const nama = (Auth.profile && Auth.profile.nama) || "Orang Tua";
-    const namaSiswa = (Auth.profile && Auth.profile.namaSiswa) || "";
+    const siswaIds = Auth.getSiswaIds();
+    const infoAnak =
+      siswaIds.length > 0
+        ? siswaIds.length + " anak terdaftar"
+        : (Auth.profile && Auth.profile.namaSiswa) ||
+          (Auth.user ? Auth.user.email : "");
 
     return `
             <div class="profile-header">
                 <div class="profile-avatar">${nama.charAt(0).toUpperCase()}</div>
                 <div class="profile-name">${nama}</div>
-                <div class="profile-email">${namaSiswa ? "Siswa: " + namaSiswa : Auth.user ? Auth.user.email : ""}</div>
+                <div class="profile-email" id="info-anak-header">${infoAnak}</div>
             </div>
 
             <div class="summary-grid" id="summary-dashboard-ortu">
@@ -40,6 +45,15 @@ Router.register("dashboard-ortu", {
 
 async function loadDashboardOrtu() {
   try {
+    // Ambil data siswa yang terhubung dulu
+    const siswaList = await getSiswaOrtu();
+
+    // Update info anak di header
+    const infoEl = document.getElementById("info-anak-header");
+    if (infoEl && siswaList.length > 0) {
+      infoEl.textContent = "Siswa: " + siswaList.map((s) => s.nama).join(", ");
+    }
+
     const tagihan = await getTagihanOrtu();
 
     // Hitung summary

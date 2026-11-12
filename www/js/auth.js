@@ -45,9 +45,26 @@ const Auth = {
     return this.profile;
   },
 
-  /** Ambil siswaId dari profil ortu (kalau sudah dihubungkan admin) */
+  /** Ambil siswaIds (array) dari profil ortu — support multi anak */
+  getSiswaIds() {
+    if (!this.profile) return [];
+    // Support format lama (siswaId tunggal) maupun baru (siswaIds array)
+    if (
+      Array.isArray(this.profile.siswaIds) &&
+      this.profile.siswaIds.length > 0
+    ) {
+      return this.profile.siswaIds;
+    }
+    if (this.profile.siswaId) {
+      return [this.profile.siswaId]; // backward compat
+    }
+    return [];
+  },
+
+  /** Ambil siswaId tunggal (backward compat) */
   getSiswaId() {
-    return this.profile ? this.profile.siswaId || null : null;
+    const ids = this.getSiswaIds();
+    return ids.length > 0 ? ids[0] : null;
   },
 
   /** Logout user */

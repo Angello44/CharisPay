@@ -347,9 +347,30 @@ async function simpanSiswa() {
     if (editId) {
       await db.collection("siswa").doc(editId).update(data);
 
-      // Kalau ortu terhubung, update juga data namaSiswa di profil ortu
+      // Cek apakah ortu berubah
+      const siswaLama = _siswaCached.find((s) => s.id === editId);
+      const ortuLama = siswaLama ? siswaLama.ortuId : null;
+
+      // Kalau ortu lama berbeda → cabut siswaId dari ortu lama
+      if (ortuLama && ortuLama !== ortuId) {
+        const ortuLamaDoc = await db.collection("users").doc(ortuLama).get();
+        if (ortuLamaDoc.exists) {
+          const idsLama = ortuLamaDoc.data().siswaIds || [];
+          await db
+            .collection("users")
+            .doc(ortuLama)
+            .update({
+              siswaIds: idsLama.filter((id) => id !== editId),
+            });
+        }
+      }
+
+      // Tambahkan ke siswaIds ortu baru (kalau ada)
       if (ortuId) {
-        await db.collection("users").doc(ortuId).update({ namaSiswa: nama });
+        const ortuDoc = await db.collection("users").doc(ortuId).get();
+        const idsOrtu = ortuDoc.exists ? ortuDoc.data().siswaIds || [] : [];
+        if (!idsOrtu.includes(editId)) idsOrtu.push(editId);
+        await db.collection("users").doc(ortuId).update({ siswaIds: idsOrtu });
       }
 
       Router.toast("Data siswa berhasil diperbarui");
@@ -357,12 +378,12 @@ async function simpanSiswa() {
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       const docRef = await db.collection("siswa").add(data);
 
-      // Update profil ortu dengan siswaId supaya query tagihan bisa pakai siswaId
+      // Tambahkan siswaId baru ke array siswaIds di profil ortu
       if (ortuId) {
-        await db.collection("users").doc(ortuId).update({
-          namaSiswa: nama,
-          siswaId: docRef.id,
-        });
+        const ortuDoc = await db.collection("users").doc(ortuId).get();
+        const idsOrtu = ortuDoc.exists ? ortuDoc.data().siswaIds || [] : [];
+        if (!idsOrtu.includes(docRef.id)) idsOrtu.push(docRef.id);
+        await db.collection("users").doc(ortuId).update({ siswaIds: idsOrtu });
       }
 
       Router.toast("Siswa berhasil ditambahkan");
@@ -385,13 +406,17 @@ async function hapusSiswa(id, nama) {
   if (!ok) return;
 
   try {
-    // Cek apakah ada ortu yang terhubung — putus relasi dulu
-    const siswa = _siswaCached.find((s) => s.id === id);
+    // Cabut dari siswaIds ortu kalau ada
+    const siswa = _siswaCached.find(s => s.id === id);
     if (siswa && siswa.ortuId) {
-      await db.collection("users").doc(siswa.ortuId).update({
-        siswaId: firebase.firestore.FieldValue.delete(),
-        namaSiswa: firebase.firestore.FieldValue.delete(),
-      });
+      const ortuDoc = await db.collection("users").doc(siswa.ortuId).get();
+      if (ortuDoc.exists) {
+        const idsOrtu = ortuDoc.data().siswaIds || [];
+        await db.collection("users").doc(siswa.ortuId).update({
+          siswaIds: idsOrtu.filter(x => x !== id)
+        });
+      }
+    }
     }
 
     await db.collection("siswa").doc(id).delete();

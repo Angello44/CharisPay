@@ -1,67 +1,92 @@
 /* ============================================================
-   Helper: Ambil Tagihan Milik Ortu
+   Helper: Ambil Tagihan Milik Ortu (Support Multi Anak)
    ============================================================
-   Dipakai bersama oleh dashboard-ortu.js dan tagihan.js.
    Urutan prioritas:
-   1. siswaId di profil (paling akurat, dihubungkan admin)
-   2. ortuId di dokumen siswa (query ke koleksi siswa)
-   3. namaSiswa di profil (fallback terakhir)
+   1. siswaIds (array) di profil — paling akurat, support multi anak
+   2. siswaId tunggal di profil — backward compat
+   3. ortuId di dokumen siswa — query ke koleksi siswa
+   4. namaSiswa di profil — fallback terakhir
    ============================================================ */
 
 async function getTagihanOrtu() {
-    const uid       = Auth.getUid();
-    const siswaId   = Auth.getSiswaId();   // dari profil kalau sudah dihubungkan
-    const namaSiswa = Auth.profile ? Auth.profile.namaSiswa : null;
+  const uid = Auth.getUid();
+  const siswaIds = Auth.getSiswaIds(); // array, bisa kosong
 
-    let tagihan = [];
+  let allSiswaIds = [...siswaIds]; // copy supaya tidak mutate
 
-    if (siswaId) {
-        // ✅ Cara terbaik: pakai siswaId langsung dari profil
-        const snap = await db.collection("tagihan")
-            .where("siswaId", "==", siswaId)
-            .get();
-        tagihan = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Kalau siswaIds kosong, coba cari lewat koleksi siswa
+  if (allSiswaIds.length === 0) {
+    const siswaSnap = await db
+      .collection("siswa")
+      .where("ortuId", "==", uid)
+      .get();
 
-    } else {
-        // Coba cari lewat koleksi siswa dengan ortuId
-        const siswaSnap = await db.collection("siswa")
-            .where("ortuId", "==", uid)
-            .get();
+    if (!siswaSnap.empty) {
+      allSiswaIds = siswaSnap.docs.map((d) => d.id);
 
-        if (!siswaSnap.empty) {
-            // Ada siswa yang terhubung ke ortu ini
-            const ids = siswaSnap.docs.map(d => d.id);
-
-            // Firestore 'in' max 10 per query
-            for (let i = 0; i < ids.length; i += 10) {
-                const batch = ids.slice(i, i + 10);
-                const snap = await db.collection("tagihan")
-                    .where("siswaId", "in", batch)
-                    .get();
-                tagihan = tagihan.concat(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-            }
-
-            // Simpan siswaId ke profil supaya query berikutnya lebih cepat
-            if (ids.length === 1) {
-                Auth.profile.siswaId = ids[0];
-                await db.collection("users").doc(uid).update({ siswaId: ids[0] });
-            }
-
-        } else if (namaSiswa) {
-            // Fallback: pakai namaSiswa — kurang akurat tapi berguna sebelum admin hubungkan
-            const snap = await db.collection("tagihan")
-                .where("namaSiswa", "==", namaSiswa)
-                .get();
-            tagihan = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        }
+      // Simpan ke profil supaya query berikutnya langsung pakai kondisi 1
+      Auth.profile.siswaIds = allSiswaIds;
+      await db.collection("users").doc(uid).update({
+        siswaIds: allSiswaIds,
+      });
     }
+  }
 
-    // Urutkan: terbaru dulu (client-side, hindari composite index)
-    tagihan.sort((a, b) => {
-        const ta = a.createdAt ? a.createdAt.toMillis() : 0;
-        const tb = b.createdAt ? b.createdAt.toMillis() : 0;
-        return tb - ta;
-    });
+  let tagihan = [];
 
-    return tagihan;
+  if (allSiswaIds.length > 0) {
+    // Query tagihan berdasarkan siswaIds (Firestore 'in' max 10)
+    for (let i = 0; i < allSiswaIds.length; i += 10) {
+      const batch = allSiswaIds.slice(i, i + 10);
+      const snap = await db
+        .collection("tagihan")
+        .where("siswaId", "in", batch)
+        .get();
+      tagihan = tagihan.concat(
+        snap.docs.map((d) => ({ id: d.id, ...d.data() })),
+      );
+    }
+  } else {
+    // Fallback terakhir: pakai namaSiswa dari profil
+    const namaSiswa = Auth.profile ? Auth.profile.namaSiswa : null;
+    if (namaSiswa) {
+      const snap = await db
+        .collection("tagihan")
+        .where("namaSiswa", "==", namaSiswa)
+        .get();
+      tagihan = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    }
+  }
+
+  // Urutkan: terbaru dulu (client-side)
+  tagihan.sort((a, b) => {
+    const ta = a.createdAt ? a.createdAt.toMillis() : 0;
+    const tb = b.createdAt ? b.createdAt.toMillis() : 0;
+    return tb - ta;
+  });
+
+  return tagihan;
+}
+
+/** Ambil daftar siswa yang terhubung ke ortu ini */
+async function getSiswaOrtu() {
+  const uid = Auth.getUid();
+  const siswaIds = Auth.getSiswaIds();
+
+  if (siswaIds.length > 0) {
+    const results = [];
+    for (let i = 0; i < siswaIds.length; i += 10) {
+      const batch = siswaIds.slice(i, i + 10);
+      const snap = await db
+        .collection("siswa")
+        .where(firebase.firestore.FieldPath.documentId(), "in", batch)
+        .get();
+      results.push(...snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }
+    return results;
+  }
+
+  // Cari lewat ortuId
+  const snap = await db.collection("siswa").where("ortuId", "==", uid).get();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
