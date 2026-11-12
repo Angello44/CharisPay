@@ -17,66 +17,24 @@ Router.register("tagihan", {
   },
 
   async init() {
-    await loadTagihanOrtu();
+    await loadTagihanOrtuPage();
   },
 });
 
-async function loadTagihanOrtu() {
+async function loadTagihanOrtuPage() {
   Helpers.loading("tagihan-ortu-list");
   try {
-    // Ambil semua siswa milik ortu ini
-    // Asumsi: koleksi siswa yang ditautkan ke UID ortu
-    // Untuk sementara, tampilkan semua tagihan yang namaSiswa-nya ada di profil ortu
-    // Nanti bisa difilter berdasarkan siswaId setelah relasi ortu-siswa dibuat
-
-    const uid = Auth.getUid();
-
-    // Ambil tagihan berdasarkan siswaId yang terdaftar ke akun ortu ini
-    // Pertama cari siswa yang terkait dengan ortu ini
-    const siswaSnap = await db
-      .collection("siswa")
-      .where("ortuId", "==", uid)
-      .get();
-
-    let tagihan = [];
-
-    if (!siswaSnap.empty) {
-      // Kalau sudah ada relasi ortu-siswa, ambil tagihan per siswa
-      const siswaIds = siswaSnap.docs.map((d) => d.id);
-
-      // Firestore 'in' max 10 item per query
-      for (let i = 0; i < siswaIds.length; i += 10) {
-        const batch = siswaIds.slice(i, i + 10);
-        const snap = await db
-          .collection("tagihan")
-          .where("siswaId", "in", batch)
-          .get();
-        tagihan = tagihan.concat(
-          snap.docs.map((d) => ({ id: d.id, ...d.data() })),
-        );
-      }
-    } else {
-      const namaSiswa = Auth.profile ? Auth.profile.namaSiswa : null;
-      if (namaSiswa) {
-        const snap = await db
-          .collection("tagihan")
-          .where("namaSiswa", "==", namaSiswa)
-          .get();
-        tagihan = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      }
-    }
-
-    // Urutkan client-side: terbaru dulu
-    tagihan.sort((a, b) => {
-      const ta = a.createdAt ? a.createdAt.toMillis() : 0;
-      const tb = b.createdAt ? b.createdAt.toMillis() : 0;
-      return tb - ta;
-    });
+    const tagihan = await getTagihanOrtu();
 
     // Hitung summary
     const counts = { belum: 0, menunggu: 0, lunas: 0, total: tagihan.length };
     tagihan.forEach((t) => {
-      if (t.status === "belum" || t.status === "revisi") counts.belum++;
+      if (
+        t.status === "belum" ||
+        t.status === "revisi" ||
+        t.status === "ditolak"
+      )
+        counts.belum++;
       else if (t.status === "menunggu") counts.menunggu++;
       else if (t.status === "lunas") counts.lunas++;
     });
@@ -92,7 +50,21 @@ async function loadTagihanOrtu() {
     }
 
     if (tagihan.length === 0) {
-      Helpers.emptyState("tagihan-ortu-list", "📄", "Belum ada tagihan SPP");
+      const siswaId = Auth.getSiswaId();
+      const namaSiswa = Auth.profile ? Auth.profile.namaSiswa : null;
+
+      if (!siswaId && !namaSiswa) {
+        document.getElementById("tagihan-ortu-list").innerHTML = `
+                    <div class="card" style="background:var(--warning-light)">
+                        <p class="text-sm" style="color:var(--warning)">
+                            ⚠️ Akun Anda belum dihubungkan ke data siswa.
+                            Silakan hubungi admin sekolah.
+                        </p>
+                    </div>
+                `;
+      } else {
+        Helpers.emptyState("tagihan-ortu-list", "📄", "Belum ada tagihan SPP");
+      }
       return;
     }
 

@@ -40,44 +40,7 @@ Router.register("dashboard-ortu", {
 
 async function loadDashboardOrtu() {
   try {
-    const uid = Auth.getUid();
-    const namaSiswa = Auth.profile ? Auth.profile.namaSiswa : null;
-
-    let tagihan = [];
-
-    // Coba cari berdasarkan relasi ortu-siswa
-    const siswaSnap = await db
-      .collection("siswa")
-      .where("ortuId", "==", uid)
-      .get();
-
-    if (!siswaSnap.empty) {
-      const siswaIds = siswaSnap.docs.map((d) => d.id);
-      for (let i = 0; i < siswaIds.length; i += 10) {
-        const batch = siswaIds.slice(i, i + 10);
-        const snap = await db
-          .collection("tagihan")
-          .where("siswaId", "in", batch)
-          .get();
-        tagihan = tagihan.concat(
-          snap.docs.map((d) => ({ id: d.id, ...d.data() })),
-        );
-      }
-    } else if (namaSiswa) {
-      // Fallback: pakai namaSiswa dari profil
-      const snap = await db
-        .collection("tagihan")
-        .where("namaSiswa", "==", namaSiswa)
-        .get();
-      tagihan = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    }
-
-    // Urutkan client-side: terbaru dulu
-    tagihan.sort((a, b) => {
-      const ta = a.createdAt ? a.createdAt.toMillis() : 0;
-      const tb = b.createdAt ? b.createdAt.toMillis() : 0;
-      return tb - ta;
-    });
+    const tagihan = await getTagihanOrtu();
 
     // Hitung summary
     const counts = { total: tagihan.length, belum: 0, menunggu: 0, lunas: 0 };
@@ -103,20 +66,35 @@ async function loadDashboardOrtu() {
             `;
     }
 
-    // Tampilkan 3 tagihan terbaru
     const container = document.getElementById("dashboard-tagihan-terbaru");
     if (!container) return;
 
     if (tagihan.length === 0) {
-      container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📄</div>
-                    <div class="empty-state-text">Belum ada tagihan SPP</div>
-                </div>
-            `;
+      // Cek apakah akun belum dihubungkan ke siswa
+      const siswaId = Auth.getSiswaId();
+      const namaSiswa = Auth.profile ? Auth.profile.namaSiswa : null;
+
+      if (!siswaId && !namaSiswa) {
+        container.innerHTML = `
+                    <div class="card" style="background:var(--warning-light)">
+                        <p class="text-sm" style="color:var(--warning)">
+                            ⚠️ Akun Anda belum dihubungkan ke data siswa.
+                            Hubungi admin sekolah untuk menghubungkan akun Anda.
+                        </p>
+                    </div>
+                `;
+      } else {
+        container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📄</div>
+                        <div class="empty-state-text">Belum ada tagihan SPP</div>
+                    </div>
+                `;
+      }
       return;
     }
 
+    // Tampilkan 3 tagihan terbaru
     const terbaru = tagihan.slice(0, 3);
     container.innerHTML =
       terbaru

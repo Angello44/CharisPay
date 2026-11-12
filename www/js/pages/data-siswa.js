@@ -12,66 +12,79 @@ Router.register("data-siswa", {
 
   render() {
     return `
-            <div class="form-group">
-                <input type="text" id="search-siswa" placeholder="&#128269; Cari nama / NIS...">
+      <div class="form-group">
+        <input type="text" id="search-siswa" placeholder="🔍 Cari nama / NIS...">
+      </div>
+      <div id="siswa-list"><div class="loading">Memuat data siswa...</div></div>
+
+      <!-- Modal Form Siswa -->
+      <div id="modal-siswa" class="modal-overlay hidden">
+        <div class="modal" style="max-height:90vh;overflow-y:auto">
+          <div class="modal-title" id="modal-siswa-title">Tambah Siswa</div>
+          <div id="siswa-form-error" class="form-error" style="margin-bottom:10px"></div>
+
+          <div class="form-group">
+            <label>Nama Lengkap Siswa</label>
+            <input type="text" id="siswa-nama" placeholder="Nama lengkap siswa">
+          </div>
+          <div class="form-group">
+            <label>NIS</label>
+            <input type="text" id="siswa-nis" placeholder="Nomor Induk Siswa">
+          </div>
+          <div class="form-group">
+            <label>Kelas</label>
+            <select id="siswa-kelas">
+              <option value="">-- Pilih Kelas --</option>
+              <option>X IPA 1</option><option>X IPA 2</option>
+              <option>X IPS 1</option><option>X IPS 2</option>
+              <option>XI IPA 1</option><option>XI IPA 2</option>
+              <option>XI IPS 1</option><option>XI IPS 2</option>
+              <option>XII IPA 1</option><option>XII IPA 2</option>
+              <option>XII IPS 1</option><option>XII IPS 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Jenis Kelamin</label>
+            <select id="siswa-jk">
+              <option value="">-- Pilih --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tahun Masuk</label>
+            <input type="number" id="siswa-tahun" placeholder="cth: 2024" min="2000" max="2099">
+          </div>
+
+          <!-- Hubungkan ke akun orang tua -->
+          <div class="form-group">
+            <label>Email Akun Orang Tua / Wali</label>
+            <div style="display:flex;gap:8px">
+              <input type="email" id="siswa-ortu-email"
+                     placeholder="email@contoh.com (opsional)"
+                     style="flex:1">
+              <button class="btn btn-secondary btn-sm"
+                      style="white-space:nowrap"
+                      onclick="cariAkunOrtu()">Cari</button>
             </div>
-            <div id="siswa-list"><div class="loading">Memuat data siswa...</div></div>
+            <div id="ortu-search-result" style="margin-top:6px"></div>
+            <input type="hidden" id="siswa-ortu-id">
+            <input type="hidden" id="siswa-ortu-nama">
+          </div>
 
-            <!-- Modal Form Siswa -->
-            <div id="modal-siswa" class="modal-overlay hidden">
-                <div class="modal" style="max-height:90vh;overflow-y:auto">
-                    <div class="modal-title" id="modal-siswa-title">Tambah Siswa</div>
+          <input type="hidden" id="siswa-edit-id">
 
-                    <div id="siswa-form-error" class="form-error" style="margin-bottom:10px"></div>
-
-                    <div class="form-group">
-                        <label>Nama Lengkap</label>
-                        <input type="text" id="siswa-nama" placeholder="Nama lengkap siswa">
-                    </div>
-                    <div class="form-group">
-                        <label>NIS</label>
-                        <input type="text" id="siswa-nis" placeholder="Nomor Induk Siswa">
-                    </div>
-                    <div class="form-group">
-                        <label>Kelas</label>
-                        <select id="siswa-kelas">
-                            <option value="">-- Pilih Kelas --</option>
-                            <option>X IPA 1</option><option>X IPA 2</option>
-                            <option>X IPS 1</option><option>X IPS 2</option>
-                            <option>XI IPA 1</option><option>XI IPA 2</option>
-                            <option>XI IPS 1</option><option>XI IPS 2</option>
-                            <option>XII IPA 1</option><option>XII IPA 2</option>
-                            <option>XII IPS 1</option><option>XII IPS 2</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Jenis Kelamin</label>
-                        <select id="siswa-jk">
-                            <option value="">-- Pilih --</option>
-                            <option value="L">Laki-laki</option>
-                            <option value="P">Perempuan</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Tahun Masuk</label>
-                        <input type="number" id="siswa-tahun" placeholder="cth: 2024" min="2000" max="2099">
-                    </div>
-
-                    <input type="hidden" id="siswa-edit-id">
-
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" onclick="tutupFormSiswa()">Batal</button>
-                        <button class="btn btn-primary" id="btn-simpan-siswa" onclick="simpanSiswa()">Simpan</button>
-                    </div>
-                </div>
-            </div>
-        `;
+          <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="tutupFormSiswa()">Batal</button>
+            <button class="btn btn-primary" id="btn-simpan-siswa" onclick="simpanSiswa()">Simpan</button>
+          </div>
+        </div>
+      </div>
+    `;
   },
 
   async init() {
     await loadDaftarSiswa();
-
-    // Live search
     document
       .getElementById("search-siswa")
       .addEventListener("input", function () {
@@ -80,7 +93,6 @@ Router.register("data-siswa", {
   },
 });
 
-// Simpan semua data siswa di memori untuk filtering
 let _siswaCached = [];
 
 async function loadDaftarSiswa() {
@@ -116,20 +128,25 @@ function renderDaftarSiswa(list) {
   }
 
   container.innerHTML = list
-    .map(
-      (s) => `
-        <div class="list-item">
-            <div class="list-item-left">
-                <div class="list-item-title">${s.nama}</div>
-                <div class="list-item-subtitle">NIS: ${s.nis || "-"} &middot; ${s.kelas || "-"}</div>
-            </div>
-            <div class="list-item-right flex gap-8">
-                <button class="btn btn-secondary btn-sm" onclick="editSiswa('${s.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="hapusSiswa('${s.id}', '${s.nama}')">Hapus</button>
-            </div>
+    .map((s) => {
+      const ortuInfo = s.ortuNama
+        ? `<span style="color:var(--success);font-size:11px">✓ ${s.ortuNama}</span>`
+        : `<span style="color:var(--warning);font-size:11px">⚠ Belum terhubung ke ortu</span>`;
+
+      return `
+      <div class="list-item">
+        <div class="list-item-left">
+          <div class="list-item-title">${s.nama}</div>
+          <div class="list-item-subtitle">NIS: ${s.nis || "-"} &middot; ${s.kelas || "-"}</div>
+          <div>${ortuInfo}</div>
         </div>
-    `,
-    )
+        <div class="list-item-right flex gap-8">
+          <button class="btn btn-secondary btn-sm" onclick="editSiswa('${s.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="hapusSiswa('${s.id}', '${s.nama}')">Hapus</button>
+        </div>
+      </div>
+    `;
+    })
     .join("");
 }
 
@@ -148,7 +165,6 @@ function filterSiswa(keyword) {
 }
 
 function showFormSiswa(data = null) {
-  // Reset form
   document.getElementById("siswa-nama").value = data ? data.nama : "";
   document.getElementById("siswa-nis").value = data ? data.nis || "" : "";
   document.getElementById("siswa-kelas").value = data ? data.kelas || "" : "";
@@ -156,11 +172,33 @@ function showFormSiswa(data = null) {
   document.getElementById("siswa-tahun").value = data
     ? data.tahunMasuk || ""
     : "";
+  document.getElementById("siswa-ortu-email").value = data
+    ? data.ortuEmail || ""
+    : "";
+  document.getElementById("siswa-ortu-id").value = data
+    ? data.ortuId || ""
+    : "";
+  document.getElementById("siswa-ortu-nama").value = data
+    ? data.ortuNama || ""
+    : "";
   document.getElementById("siswa-edit-id").value = data ? data.id : "";
   document.getElementById("siswa-form-error").textContent = "";
   document.getElementById("modal-siswa-title").textContent = data
     ? "Edit Siswa"
     : "Tambah Siswa";
+
+  // Tampilkan info ortu kalau sudah terhubung
+  const resultEl = document.getElementById("ortu-search-result");
+  if (data && data.ortuNama) {
+    resultEl.innerHTML = renderOrtuFound({
+      uid: data.ortuId,
+      nama: data.ortuNama,
+      email: data.ortuEmail,
+    });
+  } else {
+    resultEl.innerHTML = "";
+  }
+
   document.getElementById("modal-siswa").classList.remove("hidden");
 }
 
@@ -173,16 +211,98 @@ function editSiswa(id) {
   if (siswa) showFormSiswa(siswa);
 }
 
+/** Cari akun ortu berdasarkan email */
+async function cariAkunOrtu() {
+  const email = document
+    .getElementById("siswa-ortu-email")
+    .value.trim()
+    .toLowerCase();
+  const resultEl = document.getElementById("ortu-search-result");
+  const errEl = document.getElementById("siswa-form-error");
+
+  if (!email) {
+    errEl.textContent = "Masukkan email orang tua terlebih dahulu";
+    return;
+  }
+
+  if (!Helpers.isValidEmail(email)) {
+    errEl.textContent = "Format email tidak valid";
+    return;
+  }
+
+  resultEl.innerHTML = `<div class="text-sm text-secondary">Mencari akun...</div>`;
+  errEl.textContent = "";
+
+  try {
+    // Cari user dengan email ini di koleksi 'users' dengan role 'ortu'
+    const snap = await db
+      .collection("users")
+      .where("email", "==", email)
+      .where("role", "==", "ortu")
+      .get();
+
+    if (snap.empty) {
+      // Coba tanpa filter role (mungkin belum set role)
+      const snap2 = await db
+        .collection("users")
+        .where("email", "==", email)
+        .get();
+      if (snap2.empty) {
+        resultEl.innerHTML = `<div class="text-sm" style="color:var(--danger)">❌ Akun dengan email ini tidak ditemukan. Pastikan orang tua sudah mendaftar.</div>`;
+        document.getElementById("siswa-ortu-id").value = "";
+        document.getElementById("siswa-ortu-nama").value = "";
+        return;
+      }
+      const user = { uid: snap2.docs[0].id, ...snap2.docs[0].data() };
+      pilihOrtu(user);
+      resultEl.innerHTML = renderOrtuFound(user);
+    } else {
+      const user = { uid: snap.docs[0].id, ...snap.docs[0].data() };
+      pilihOrtu(user);
+      resultEl.innerHTML = renderOrtuFound(user);
+    }
+  } catch (err) {
+    resultEl.innerHTML = `<div class="text-sm" style="color:var(--danger)">Gagal mencari: ${err.message}</div>`;
+  }
+}
+
+function pilihOrtu(user) {
+  document.getElementById("siswa-ortu-id").value = user.uid;
+  document.getElementById("siswa-ortu-nama").value = user.nama || "";
+}
+
+function renderOrtuFound(user) {
+  return `
+    <div style="background:var(--success-light);padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="text-sm font-semibold" style="color:var(--success)">✓ Akun ditemukan</div>
+        <div class="text-sm">${user.nama || "-"} &middot; ${user.email || ""}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="hapusLinkOrtu()">✕</button>
+    </div>
+  `;
+}
+
+function hapusLinkOrtu() {
+  document.getElementById("siswa-ortu-id").value = "";
+  document.getElementById("siswa-ortu-nama").value = "";
+  document.getElementById("siswa-ortu-email").value = "";
+  document.getElementById("ortu-search-result").innerHTML = "";
+}
+
 async function simpanSiswa() {
   const nama = document.getElementById("siswa-nama").value.trim();
   const nis = document.getElementById("siswa-nis").value.trim();
   const kelas = document.getElementById("siswa-kelas").value;
   const jk = document.getElementById("siswa-jk").value;
   const tahunMasuk = document.getElementById("siswa-tahun").value.trim();
+  const ortuId = document.getElementById("siswa-ortu-id").value;
+  const ortuNama = document.getElementById("siswa-ortu-nama").value;
+  const ortuEmail = document.getElementById("siswa-ortu-email").value.trim();
   const editId = document.getElementById("siswa-edit-id").value;
   const errEl = document.getElementById("siswa-form-error");
 
-  // Validasi
+  // Validasi wajib
   if (!nama) {
     errEl.textContent = "Nama siswa wajib diisi";
     return;
@@ -200,7 +320,7 @@ async function simpanSiswa() {
     return;
   }
 
-  // Cek NIS duplikat (kecuali saat edit dokumen yang sama)
+  // Cek NIS duplikat
   const dupSnap = await db.collection("siswa").where("nis", "==", nis).get();
   const isDuplikat = dupSnap.docs.some((doc) => doc.id !== editId);
   if (isDuplikat) {
@@ -216,20 +336,38 @@ async function simpanSiswa() {
     kelas,
     jk,
     tahunMasuk: tahunMasuk ? parseInt(tahunMasuk) : null,
+    // Relasi ortu — kosong string kalau tidak ada
+    ortuId: ortuId || "",
+    ortuNama: ortuNama || "",
+    ortuEmail: ortuEmail || "",
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
   try {
     if (editId) {
-      // Update dokumen yang ada
       await db.collection("siswa").doc(editId).update(data);
+
+      // Kalau ortu terhubung, update juga data namaSiswa di profil ortu
+      if (ortuId) {
+        await db.collection("users").doc(ortuId).update({ namaSiswa: nama });
+      }
+
       Router.toast("Data siswa berhasil diperbarui");
     } else {
-      // Tambah dokumen baru
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection("siswa").add(data);
+      const docRef = await db.collection("siswa").add(data);
+
+      // Update profil ortu dengan siswaId supaya query tagihan bisa pakai siswaId
+      if (ortuId) {
+        await db.collection("users").doc(ortuId).update({
+          namaSiswa: nama,
+          siswaId: docRef.id,
+        });
+      }
+
       Router.toast("Siswa berhasil ditambahkan");
     }
+
     tutupFormSiswa();
     await loadDaftarSiswa();
   } catch (err) {
@@ -247,6 +385,15 @@ async function hapusSiswa(id, nama) {
   if (!ok) return;
 
   try {
+    // Cek apakah ada ortu yang terhubung — putus relasi dulu
+    const siswa = _siswaCached.find((s) => s.id === id);
+    if (siswa && siswa.ortuId) {
+      await db.collection("users").doc(siswa.ortuId).update({
+        siswaId: firebase.firestore.FieldValue.delete(),
+        namaSiswa: firebase.firestore.FieldValue.delete(),
+      });
+    }
+
     await db.collection("siswa").doc(id).delete();
     Router.toast("Siswa berhasil dihapus");
     await loadDaftarSiswa();
