@@ -9,13 +9,14 @@ Router.register("tagihan-admin", {
   nav: false,
   requireAuth: true,
   role: "admin",
-  action: "showFormTagihan()",
+  action: "showPilihJenisTagihan()",
   actionIcon: "+",
 
   render() {
     return `
             <div class="form-group flex gap-8" style="margin-bottom:0">
-                <select id="filter-status-tagihan" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <select id="filter-status-tagihan"
+                        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
                     <option value="">Semua Status</option>
                     <option value="belum">Belum Dibayar</option>
                     <option value="menunggu">Menunggu Verifikasi</option>
@@ -28,7 +29,102 @@ Router.register("tagihan-admin", {
             <div id="summary-tagihan" class="summary-grid" style="margin-top:12px"></div>
             <div id="tagihan-admin-list"><div class="loading">Memuat tagihan...</div></div>
 
-            <!-- Modal Form Tagihan -->
+            <!-- =====================================================
+                 Modal Pilih Jenis Buat Tagihan
+                 ===================================================== -->
+            <div id="modal-pilih-jenis" class="modal-overlay hidden">
+                <div class="modal">
+                    <div class="modal-title">Buat Tagihan SPP</div>
+                    <p class="text-sm text-secondary mb-16">Pilih cara membuat tagihan:</p>
+
+                    <button class="btn btn-primary mb-8"
+                            onclick="tutupModalPilihJenis(); showFormBulkTagihan()">
+                        📋 Semua Siswa (Bulk)
+                        <span style="display:block;font-size:12px;font-weight:400;opacity:0.85">
+                            Buat tagihan satu periode untuk semua siswa sekaligus
+                        </span>
+                    </button>
+
+                    <button class="btn btn-secondary mb-8"
+                            onclick="tutupModalPilihJenis(); showFormTagihan()">
+                        👤 Satu Siswa
+                        <span style="display:block;font-size:12px;font-weight:400;opacity:0.75">
+                            Buat tagihan untuk siswa tertentu saja
+                        </span>
+                    </button>
+
+                    <button class="btn btn-outline" onclick="tutupModalPilihJenis()">Batal</button>
+                </div>
+            </div>
+
+            <!-- =====================================================
+                 Modal Bulk Tagihan (semua siswa)
+                 ===================================================== -->
+            <div id="modal-bulk-tagihan" class="modal-overlay hidden">
+                <div class="modal" style="max-height:90vh;overflow-y:auto">
+                    <div class="modal-title">Buat Tagihan Semua Siswa</div>
+                    <div id="bulk-form-error" class="form-error" style="margin-bottom:10px"></div>
+
+                    <div class="form-group">
+                        <label>Periode (Bulan/Tahun)</label>
+                        <input type="month" id="bulk-periode">
+                    </div>
+                    <div class="form-group">
+                        <label>Nominal SPP (Rp)</label>
+                        <input type="number" id="bulk-nominal" placeholder="cth: 350000" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Jatuh Tempo</label>
+                        <input type="date" id="bulk-jatuh-tempo">
+                    </div>
+                    <div class="form-group">
+                        <label>Keterangan (opsional)</label>
+                        <input type="text" id="bulk-keterangan" placeholder="cth: SPP Desember 2026">
+                    </div>
+
+                    <!-- Filter kelas (opsional) -->
+                    <div class="form-group">
+                        <label>Filter Kelas (kosongkan = semua kelas)</label>
+                        <select id="bulk-kelas">
+                            <option value="">Semua Kelas</option>
+                            <option>X IPA 1</option><option>X IPA 2</option>
+                            <option>X IPS 1</option><option>X IPS 2</option>
+                            <option>XI IPA 1</option><option>XI IPA 2</option>
+                            <option>XI IPS 1</option><option>XI IPS 2</option>
+                            <option>XII IPA 1</option><option>XII IPA 2</option>
+                            <option>XII IPS 1</option><option>XII IPS 2</option>
+                        </select>
+                        <div class="form-hint">Kosongkan untuk buat tagihan ke semua kelas sekaligus</div>
+                    </div>
+
+                    <!-- Preview jumlah siswa -->
+                    <div id="bulk-preview" style="display:none;margin-bottom:12px">
+                        <div class="card" style="background:var(--primary-light);padding:12px">
+                            <div class="text-sm font-semibold" id="bulk-preview-text"></div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar saat proses -->
+                    <div id="bulk-progress" style="display:none;margin-bottom:12px">
+                        <div class="text-sm text-secondary mb-8" id="bulk-progress-text">Membuat tagihan...</div>
+                        <div style="background:var(--border);border-radius:4px;height:8px">
+                            <div id="bulk-progress-bar"
+                                 style="background:var(--primary);height:8px;border-radius:4px;width:0%;transition:width 0.3s"></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="tutupFormBulkTagihan()">Batal</button>
+                        <button class="btn btn-primary" id="btn-buat-bulk" onclick="buatTagihanBulk()">
+                            Buat Tagihan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =====================================================
+                 Modal Form Tagihan (satu siswa)
+                 ===================================================== -->
             <div id="modal-tagihan" class="modal-overlay hidden">
                 <div class="modal" style="max-height:90vh;overflow-y:auto">
                     <div class="modal-title">Buat Tagihan SPP</div>
@@ -54,17 +150,21 @@ Router.register("tagihan-admin", {
                     </div>
                     <div class="form-group">
                         <label>Keterangan (opsional)</label>
-                        <textarea id="tagihan-keterangan" placeholder="cth: SPP bulan November 2026"></textarea>
+                        <textarea id="tagihan-keterangan"
+                                  placeholder="cth: SPP bulan November 2026"></textarea>
                     </div>
 
                     <div class="modal-actions">
                         <button class="btn btn-secondary" onclick="tutupFormTagihan()">Batal</button>
-                        <button class="btn btn-primary" id="btn-simpan-tagihan" onclick="simpanTagihan()">Buat Tagihan</button>
+                        <button class="btn btn-primary" id="btn-simpan-tagihan"
+                                onclick="simpanTagihan()">Buat Tagihan</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Modal Catat Pembayaran Tunai -->
+            <!-- =====================================================
+                 Modal Catat Pembayaran Tunai
+                 ===================================================== -->
             <div id="modal-tunai" class="modal-overlay hidden">
                 <div class="modal">
                     <div class="modal-title">Catat Pembayaran Tunai</div>
@@ -81,7 +181,8 @@ Router.register("tagihan-admin", {
                     <input type="hidden" id="tunai-tagihan-id">
                     <div class="modal-actions">
                         <button class="btn btn-secondary" onclick="tutupModalTunai()">Batal</button>
-                        <button class="btn btn-success" id="btn-konfirmasi-tunai" onclick="konfirmasiTunai()">Konfirmasi Lunas</button>
+                        <button class="btn btn-success" id="btn-konfirmasi-tunai"
+                                onclick="konfirmasiTunai()">Konfirmasi Lunas</button>
                     </div>
                 </div>
             </div>
@@ -98,6 +199,10 @@ Router.register("tagihan-admin", {
   },
 });
 
+/* ============================================================
+   Load & Render Tagihan
+   ============================================================ */
+
 let _tagihanAdminCached = [];
 
 async function loadTagihanAdmin(filterStatus = "") {
@@ -105,10 +210,9 @@ async function loadTagihanAdmin(filterStatus = "") {
   try {
     let query = db.collection("tagihan");
     if (filterStatus) query = query.where("status", "==", filterStatus);
-
     const snap = await query.get();
 
-    // Hitung summary
+    // Summary
     const all = await db.collection("tagihan").get();
     const counts = { belum: 0, menunggu: 0, lunas: 0, revisi: 0, ditolak: 0 };
     all.docs.forEach((d) => {
@@ -139,7 +243,6 @@ async function loadTagihanAdmin(filterStatus = "") {
       id: doc.id,
       ...doc.data(),
     }));
-    // Sort client-side: terbaru dulu
     _tagihanAdminCached.sort((a, b) => {
       const ta = a.createdAt ? a.createdAt.toMillis() : 0;
       const tb = b.createdAt ? b.createdAt.toMillis() : 0;
@@ -158,10 +261,6 @@ function renderTagihanAdmin(list) {
 
   container.innerHTML = list
     .map((t) => {
-      const statusInfo = Helpers.statusInfo(t.status);
-      const periodeLabel = Helpers.periodeLabel(t.periode);
-
-      // Tombol aksi berdasarkan status
       let actionBtn = "";
       if (t.status === "belum") {
         actionBtn = `<button class="btn btn-success btn-sm" onclick="showModalTunai('${t.id}')">Catat Tunai</button>`;
@@ -174,7 +273,7 @@ function renderTagihanAdmin(list) {
                 <div class="flex justify-between items-center mb-8">
                     <div>
                         <div class="font-semibold">${t.namaSiswa || "Siswa"}</div>
-                        <div class="text-sm text-secondary">${t.kelas || ""} &middot; SPP ${periodeLabel}</div>
+                        <div class="text-sm text-secondary">${t.kelas || ""} &middot; SPP ${Helpers.periodeLabel(t.periode)}</div>
                     </div>
                     ${Helpers.badge(t.status)}
                 </div>
@@ -193,17 +292,225 @@ function renderTagihanAdmin(list) {
     .join("");
 }
 
+/* ============================================================
+   Modal Pilih Jenis Tagihan
+   ============================================================ */
+
+function showPilihJenisTagihan() {
+  document.getElementById("modal-pilih-jenis").classList.remove("hidden");
+}
+
+function tutupModalPilihJenis() {
+  document.getElementById("modal-pilih-jenis").classList.add("hidden");
+}
+
+/* ============================================================
+   Bulk Tagihan — Semua Siswa Sekaligus
+   ============================================================ */
+
+function showFormBulkTagihan() {
+  // Default nilai
+  const now = new Date();
+  const bulanDepan = new Date(now.getFullYear(), now.getMonth() + 1, 20);
+  document.getElementById("bulk-periode").value =
+    now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  document.getElementById("bulk-jatuh-tempo").value = bulanDepan
+    .toISOString()
+    .split("T")[0];
+  document.getElementById("bulk-nominal").value = "";
+  document.getElementById("bulk-keterangan").value = "";
+  document.getElementById("bulk-kelas").value = "";
+  document.getElementById("bulk-form-error").textContent = "";
+  document.getElementById("bulk-preview").style.display = "none";
+  document.getElementById("bulk-progress").style.display = "none";
+  document.getElementById("modal-bulk-tagihan").classList.remove("hidden");
+
+  // Auto preview saat kelas dipilih
+  document.getElementById("bulk-kelas").onchange = previewBulk;
+  document.getElementById("bulk-periode").onchange = previewBulk;
+  previewBulk();
+}
+
+function tutupFormBulkTagihan() {
+  document.getElementById("modal-bulk-tagihan").classList.add("hidden");
+}
+
+async function previewBulk() {
+  const kelas = document.getElementById("bulk-kelas").value;
+  const periode = document.getElementById("bulk-periode").value;
+  if (!periode) return;
+
+  try {
+    // Hitung berapa siswa yang akan dibuatkan tagihan
+    let siswaQuery = db.collection("siswa");
+    if (kelas) siswaQuery = siswaQuery.where("kelas", "==", kelas);
+    const siswaSnap = await siswaQuery.get();
+
+    // Cek berapa yang sudah punya tagihan periode ini
+    let sudahAda = 0;
+    if (!siswaSnap.empty) {
+      const tagihanSnap = await db
+        .collection("tagihan")
+        .where("periode", "==", periode)
+        .get();
+      const siswaIdDenganTagihan = new Set(
+        tagihanSnap.docs.map((d) => d.data().siswaId),
+      );
+      sudahAda = siswaSnap.docs.filter((d) =>
+        siswaIdDenganTagihan.has(d.id),
+      ).length;
+    }
+
+    const totalSiswa = siswaSnap.size;
+    const akanDibuat = totalSiswa - sudahAda;
+
+    const previewEl = document.getElementById("bulk-preview");
+    const previewText = document.getElementById("bulk-preview-text");
+    previewEl.style.display = "block";
+
+    if (totalSiswa === 0) {
+      previewText.innerHTML = `<span style="color:var(--danger)">⚠️ Tidak ada siswa${kelas ? " di kelas " + kelas : ""}</span>`;
+    } else {
+      previewText.innerHTML = `
+                📋 Total siswa: <strong>${totalSiswa}</strong>${kelas ? " (kelas " + kelas + ")" : ""}<br>
+                ✅ Sudah ada tagihan: <strong>${sudahAda}</strong><br>
+                🆕 Akan dibuat: <strong style="color:var(--primary)">${akanDibuat} tagihan baru</strong>
+                ${sudahAda > 0 ? "<br><span style='color:var(--warning);font-size:12px'>⚠ Siswa yang sudah punya tagihan periode ini akan dilewati</span>" : ""}
+            `;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function buatTagihanBulk() {
+  const periode = document.getElementById("bulk-periode").value;
+  const nominal = document.getElementById("bulk-nominal").value;
+  const jatuhTempo = document.getElementById("bulk-jatuh-tempo").value;
+  const keterangan = document.getElementById("bulk-keterangan").value.trim();
+  const kelas = document.getElementById("bulk-kelas").value;
+  const errEl = document.getElementById("bulk-form-error");
+
+  // Validasi
+  if (!periode) {
+    errEl.textContent = "Periode wajib diisi";
+    return;
+  }
+  if (!nominal || parseInt(nominal) < 1) {
+    errEl.textContent = "Nominal harus lebih dari 0";
+    return;
+  }
+  if (!jatuhTempo) {
+    errEl.textContent = "Jatuh tempo wajib diisi";
+    return;
+  }
+
+  const ok = await Helpers.confirm(
+    `Buat tagihan SPP ${Helpers.periodeLabel(periode)} senilai ${Helpers.rupiah(parseInt(nominal))} ` +
+      `untuk ${kelas ? "kelas " + kelas : "semua siswa"}?`,
+  );
+  if (!ok) return;
+
+  // Ambil data siswa
+  let siswaQuery = db.collection("siswa");
+  if (kelas) siswaQuery = siswaQuery.where("kelas", "==", kelas);
+  const siswaSnap = await siswaQuery.get();
+
+  if (siswaSnap.empty) {
+    errEl.textContent = "Tidak ada siswa" + (kelas ? " di kelas " + kelas : "");
+    return;
+  }
+
+  // Ambil tagihan yang sudah ada di periode ini — hindari duplikat
+  const tagihanSnap = await db
+    .collection("tagihan")
+    .where("periode", "==", periode)
+    .get();
+  const siswaIdSudahAda = new Set(
+    tagihanSnap.docs.map((d) => d.data().siswaId),
+  );
+
+  const siswaList = siswaSnap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((s) => !siswaIdSudahAda.has(s.id)); // lewati yang sudah ada
+
+  if (siswaList.length === 0) {
+    errEl.textContent = "Semua siswa sudah punya tagihan untuk periode ini";
+    return;
+  }
+
+  // Tampilkan progress
+  Helpers.btnLoading("btn-buat-bulk", "Memproses...");
+  const progressDiv = document.getElementById("bulk-progress");
+  const progressBar = document.getElementById("bulk-progress-bar");
+  const progressText = document.getElementById("bulk-progress-text");
+  progressDiv.style.display = "block";
+  errEl.textContent = "";
+
+  let berhasil = 0;
+  let gagal = 0;
+
+  // Firestore batch write — max 500 operasi per batch
+  const BATCH_SIZE = 499;
+  for (let i = 0; i < siswaList.length; i += BATCH_SIZE) {
+    const chunk = siswaList.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+
+    chunk.forEach((siswa) => {
+      const docRef = db.collection("tagihan").doc(); // auto ID
+      batch.set(docRef, {
+        siswaId: siswa.id,
+        namaSiswa: siswa.nama,
+        kelas: siswa.kelas || "",
+        periode,
+        nominal: parseInt(nominal),
+        jatuhTempo,
+        keterangan: keterangan || "SPP " + Helpers.periodeLabel(periode),
+        status: "belum",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+
+    try {
+      await batch.commit();
+      berhasil += chunk.length;
+    } catch (err) {
+      console.error("Batch error:", err);
+      gagal += chunk.length;
+    }
+
+    // Update progress bar
+    const persen = Math.round((berhasil / siswaList.length) * 100);
+    progressBar.style.width = persen + "%";
+    progressText.textContent = `Membuat tagihan... ${berhasil} dari ${siswaList.length} selesai`;
+  }
+
+  // Selesai
+  if (gagal === 0) {
+    Router.toast(`✅ ${berhasil} tagihan berhasil dibuat`);
+  } else {
+    Router.toast(`⚠️ ${berhasil} berhasil, ${gagal} gagal`);
+  }
+
+  tutupFormBulkTagihan();
+  await loadTagihanAdmin();
+  Helpers.btnReset("btn-buat-bulk");
+}
+
+/* ============================================================
+   Form Tagihan Satu Siswa
+   ============================================================ */
+
 async function showFormTagihan() {
-  // Ambil daftar siswa untuk dropdown
   const snap = await db.collection("siswa").orderBy("nama").get();
   const select = document.getElementById("tagihan-siswa-id");
   select.innerHTML = '<option value="">-- Pilih Siswa --</option>';
   snap.docs.forEach((doc) => {
     const s = doc.data();
-    select.innerHTML += `<option value="${doc.id}" data-nama="${s.nama}" data-kelas="${s.kelas}">${s.nama} (${s.kelas})</option>`;
+    select.innerHTML += `<option value="${doc.id}" data-nama="${s.nama}" data-kelas="${s.kelas || ""}">${s.nama} (${s.kelas || "-"})</option>`;
   });
 
-  // Default tanggal hari ini
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("tagihan-jatuh-tempo").value = today;
   document.getElementById("tagihan-form-error").textContent = "";
@@ -222,7 +529,6 @@ async function simpanTagihan() {
   const keterangan = document.getElementById("tagihan-keterangan").value.trim();
   const errEl = document.getElementById("tagihan-form-error");
 
-  // Validasi
   if (!siswaId) {
     errEl.textContent = "Pilih siswa terlebih dahulu";
     return;
@@ -240,7 +546,7 @@ async function simpanTagihan() {
     return;
   }
 
-  // Cek duplikat tagihan (siswa + periode yang sama)
+  // Cek duplikat
   const dupSnap = await db
     .collection("tagihan")
     .where("siswaId", "==", siswaId)
@@ -251,7 +557,6 @@ async function simpanTagihan() {
     return;
   }
 
-  // Ambil data siswa
   const siswaOpt = document.querySelector(
     `#tagihan-siswa-id option[value="${siswaId}"]`,
   );
@@ -281,6 +586,10 @@ async function simpanTagihan() {
     Helpers.btnReset("btn-simpan-tagihan");
   }
 }
+
+/* ============================================================
+   Catat Pembayaran Tunai
+   ============================================================ */
 
 function showModalTunai(tagihanId) {
   const tagihan = _tagihanAdminCached.find((t) => t.id === tagihanId);
@@ -316,12 +625,11 @@ async function konfirmasiTunai() {
   try {
     const tagihan = _tagihanAdminCached.find((t) => t.id === tagihanId);
 
-    // Simpan transaksi
     await db.collection("transaksi").add({
       tagihanId,
-      siswaId: tagihan.siswaId,
-      namaSiswa: tagihan.namaSiswa,
-      kelas: tagihan.kelas,
+      siswaId: tagihan.siswaId || "",
+      namaSiswa: tagihan.namaSiswa || "",
+      kelas: tagihan.kelas || "",
       periode: tagihan.periode,
       nominal: tagihan.nominal,
       metode: "tunai",
@@ -333,7 +641,6 @@ async function konfirmasiTunai() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Update status tagihan
     await db.collection("tagihan").doc(tagihanId).update({
       status: "lunas",
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
