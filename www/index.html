@@ -10,11 +10,11 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        default-src 'self' data: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline';
+        default-src 'self' data: https://ssl.gstatic.com https://www.gstatic.com 'unsafe-eval' 'unsafe-inline';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data: content: blob: https://*.googleusercontent.com https://*.firebasestorage.app;
-        connect-src 'self' http://localhost:* http://127.0.0.1:* https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebasestorage.app;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com;
+        connect-src 'self' http://localhost:* http://127.0.0.1:* https://www.gstatic.com https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebasestorage.app;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://ssl.gstatic.com;
     "
     />
     <meta name="format-detection" content="telephone=no" />
