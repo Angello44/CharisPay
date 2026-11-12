@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Cordova generated (tidak perlu di-push, bisa di-generate ulang)
+/plugins/
+/platforms/
+
+# Build output
+*.apk
+*.aab
+*.keystore
+
+# Editor
+.vscode/
+*.log

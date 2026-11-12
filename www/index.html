@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+        Content Security Policy — dibuka lebar untuk development.
+        Untuk produksi, tighten script-src dan connect-src.
+        Firebase membutuhkan akses ke domain gstatic.com, googleapis.com, dan firebaseio.com.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self' data: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data: content: https://*.googleusercontent.com https://*.firebasestorage.app;
+        connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebasestorage.app;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com;
+    "
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, width=device-width, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>SPP Charis Institute</title>
+  </head>
+  <body>
+    <!-- Container utama aplikasi (SPA shell) -->
+    <div id="app">
+      <header id="app-header"></header>
+      <main id="app-content"></main>
+      <nav id="app-nav"></nav>
+    </div>
+
+    <!-- Cordova -->
+    <script src="cordova.js"></script>
+
+    <!-- Firebase SDK v13.2.0 (compat version — pakai global firebase object) -->
+    <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-storage-compat.js"></script>
+
+    <!-- Script aplikasi (urutan penting!) -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/helpers.js"></script>
+
+    <!-- Halaman-halaman (setiap file mendaftarkan routenya sendiri) -->
+    <script src="js/pages/splash.js"></script>
+    <script src="js/pages/login.js"></script>
+    <script src="js/pages/register.js"></script>
+    <script src="js/pages/dashboard-ortu.js"></script>
+    <script src="js/pages/tagihan.js"></script>
+    <script src="js/pages/detail-tagihan.js"></script>
+    <script src="js/pages/pembayaran.js"></script>
+    <script src="js/pages/riwayat.js"></script>
+    <script src="js/pages/dashboard-admin.js"></script>
+    <script src="js/pages/data-siswa.js"></script>
+    <script src="js/pages/tagihan-admin.js"></script>
+    <script src="js/pages/verifikasi.js"></script>
+    <script src="js/pages/laporan.js"></script>
+
+    <!-- Inisialisasi aplikasi (harus terakhir) -->
+    <script src="js/index.js"></script>
+  </body>
+</html>
