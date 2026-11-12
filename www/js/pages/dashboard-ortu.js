@@ -35,6 +35,15 @@ Router.register("dashboard-ortu", {
 
             <div class="section-title">Tagihan Terbaru</div>
             <div id="dashboard-tagihan-terbaru"><div class="loading">Memuat tagihan...</div></div>
+
+            <div class="flex gap-8 mt-16">
+                <button class="btn btn-outline" style="flex:1" onclick="Router.go('nilai-ortu')">
+                    📊 Nilai Anak
+                </button>
+                <button class="btn btn-outline" style="flex:1" onclick="Router.go('panduan')">
+                    ❓ Bantuan
+                </button>
+            </div>
         `;
   },
 

@@ -33,15 +33,8 @@ Router.register("data-siswa", {
           </div>
           <div class="form-group">
             <label>Kelas</label>
-            <select id="siswa-kelas">
-              <option value="">-- Pilih Kelas --</option>
-              <option>X IPA 1</option><option>X IPA 2</option>
-              <option>X IPS 1</option><option>X IPS 2</option>
-              <option>XI IPA 1</option><option>XI IPA 2</option>
-              <option>XI IPS 1</option><option>XI IPS 2</option>
-              <option>XII IPA 1</option><option>XII IPA 2</option>
-              <option>XII IPS 1</option><option>XII IPS 2</option>
-            </select>
+            <select id="siswa-kelas" onchange="onKelasChange(this.value)"></select>
+            <div id="info-wali-kelas" class="form-hint" style="margin-top:6px"></div>
           </div>
           <div class="form-group">
             <label>Jenis Kelamin</label>
@@ -167,25 +160,19 @@ function filterSiswa(keyword) {
 function showFormSiswa(data = null) {
   document.getElementById("siswa-nama").value = data ? data.nama : "";
   document.getElementById("siswa-nis").value = data ? data.nis || "" : "";
-  document.getElementById("siswa-kelas").value = data ? data.kelas || "" : "";
+  document.getElementById("siswa-kelas").innerHTML = getKelasOptions(data ? data.kelas || "" : "");
   document.getElementById("siswa-jk").value = data ? data.jk || "" : "";
-  document.getElementById("siswa-tahun").value = data
-    ? data.tahunMasuk || ""
-    : "";
-  document.getElementById("siswa-ortu-email").value = data
-    ? data.ortuEmail || ""
-    : "";
-  document.getElementById("siswa-ortu-id").value = data
-    ? data.ortuId || ""
-    : "";
-  document.getElementById("siswa-ortu-nama").value = data
-    ? data.ortuNama || ""
-    : "";
+  document.getElementById("siswa-tahun").value = data ? data.tahunMasuk || "" : "";
+  document.getElementById("siswa-ortu-email").value = data ? data.ortuEmail || "" : "";
+  document.getElementById("siswa-ortu-id").value = data ? data.ortuId || "" : "";
+  document.getElementById("siswa-ortu-nama").value = data ? data.ortuNama || "" : "";
   document.getElementById("siswa-edit-id").value = data ? data.id : "";
   document.getElementById("siswa-form-error").textContent = "";
-  document.getElementById("modal-siswa-title").textContent = data
-    ? "Edit Siswa"
-    : "Tambah Siswa";
+  document.getElementById("modal-siswa-title").textContent = data ? "Edit Siswa" : "Tambah Siswa";
+
+  // Tampilkan wali kelas otomatis
+  if (data && data.kelas) onKelasChange(data.kelas);
+  else document.getElementById("info-wali-kelas").textContent = "";
 
   // Tampilkan info ortu kalau sudah terhubung
   const resultEl = document.getElementById("ortu-search-result");
@@ -424,5 +411,22 @@ async function hapusSiswa(id, nama) {
     await loadDaftarSiswa();
   } catch (err) {
     Router.toast("Gagal menghapus: " + err.message);
+  }
+}
+
+/** Tampilkan wali kelas otomatis saat kelas dipilih */
+async function onKelasChange(kelas) {
+  const infoEl = document.getElementById("info-wali-kelas");
+  if (!infoEl) return;
+  if (!kelas) { infoEl.textContent = ""; return; }
+
+  infoEl.textContent = "Mencari wali kelas...";
+  const wali = await getWaliByKelas(kelas);
+  if (wali) {
+    infoEl.innerHTML = `👩‍🏫 Wali Kelas: <strong>${wali.namaWali}</strong>${wali.noHp ? " &middot; 📞 " + wali.noHp : ""}`;
+    infoEl.style.color = "var(--success)";
+  } else {
+    infoEl.textContent = "⚠ Wali kelas belum diatur untuk kelas ini";
+    infoEl.style.color = "var(--warning)";
   }
 }

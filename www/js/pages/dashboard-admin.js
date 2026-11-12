@@ -59,6 +59,22 @@ Router.register("dashboard-admin", {
                 </div>
                 <span class="text-secondary">›</span>
             </div>
+
+            <div class="list-item" onclick="Router.go('wali-kelas')">
+                <div class="list-item-left">
+                    <div class="list-item-title">👩‍🏫 Wali Kelas</div>
+                    <div class="list-item-subtitle">Kelola data wali kelas per kelas</div>
+                </div>
+                <span class="text-secondary">›</span>
+            </div>
+
+            <div class="list-item" onclick="Router.go('nilai-admin')">
+                <div class="list-item-left">
+                    <div class="list-item-title">📊 Input Nilai Siswa</div>
+                    <div class="list-item-subtitle">Input nilai rata-rata akhir per kelas</div>
+                </div>
+                <span class="text-secondary">›</span>
+            </div>
         `;
   },
 
