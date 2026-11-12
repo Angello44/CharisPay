@@ -1,5 +1,5 @@
 /* ============================================================
-   Halaman Tagihan SPP (Orang Tua - Clean Vector UI)
+   Halaman Tagihan SPP (Orang Tua)
    ============================================================ */
 
 Router.register("tagihan", {
@@ -10,26 +10,26 @@ Router.register("tagihan", {
 
   render() {
     return `
-      <!-- Ringkasan Mini -->
-      <div class="summary-tiles-grid" id="summary-tagihan-ortu">
-        <div class="summary-tile"><div class="summary-tile-num">-</div><div class="summary-tile-label">Total</div></div>
-        <div class="summary-tile warning"><div class="summary-tile-num">-</div><div class="summary-tile-label">Belum Lunas</div></div>
-        <div class="summary-tile success"><div class="summary-tile-num">-</div><div class="summary-tile-label">Lunas</div></div>
-      </div>
+            <!-- Ringkasan -->
+            <div class="summary-tiles-grid" id="summary-tagihan-ortu">
+                <div class="summary-tile"><div class="summary-tile-num">-</div><div class="summary-tile-label">Total</div></div>
+                <div class="summary-tile warning"><div class="summary-tile-num">-</div><div class="summary-tile-label">Belum Lunas</div></div>
+                <div class="summary-tile success"><div class="summary-tile-num">-</div><div class="summary-tile-label">Lunas</div></div>
+            </div>
 
-      <!-- Filter Kategori Status -->
-      <div class="filter-tabs" id="tagihan-filter-tabs">
-        <div class="filter-chip active" onclick="filterTagihanPage('semua', this)">Semua Tagihan</div>
-        <div class="filter-chip" onclick="filterTagihanPage('belum', this)">Belum Bayar</div>
-        <div class="filter-chip" onclick="filterTagihanPage('menunggu', this)">Menunggu Verifikasi</div>
-        <div class="filter-chip" onclick="filterTagihanPage('lunas', this)">Sudah Lunas</div>
-      </div>
+            <!-- Filter Status -->
+            <div class="filter-tabs" id="tagihan-filter-tabs">
+                <div class="filter-chip active" onclick="filterTagihanPage('semua', this)">Semua</div>
+                <div class="filter-chip" onclick="filterTagihanPage('belum', this)">Belum Bayar</div>
+                <div class="filter-chip" onclick="filterTagihanPage('menunggu', this)">Menunggu</div>
+                <div class="filter-chip" onclick="filterTagihanPage('lunas', this)">Lunas</div>
+            </div>
 
-      <!-- Daftar Tagihan -->
-      <div id="tagihan-ortu-list">
-        <div class="loading">Memuat tagihan...</div>
-      </div>
-    `;
+            <!-- Daftar Tagihan per Anak -->
+            <div id="tagihan-ortu-list">
+                <div class="loading">Memuat tagihan...</div>
+            </div>
+        `;
   },
 
   async init() {
@@ -37,47 +37,52 @@ Router.register("tagihan", {
   },
 });
 
-let _allTagihanCache = [];
+let _tagihanPerSiswaCache = {}; // { siswaId: { siswa, tagihan[] } }
 let _currentFilter = "semua";
 
 async function loadTagihanOrtuPage() {
   Helpers.loading("tagihan-ortu-list");
   try {
-    const tagihan = await getTagihanOrtu();
-    _allTagihanCache = tagihan;
+    _tagihanPerSiswaCache = await getTagihanOrtuPerSiswa();
 
-    const counts = { belum: 0, menunggu: 0, lunas: 0, total: tagihan.length };
-    tagihan.forEach((t) => {
-      if (t.status === "belum" || t.status === "revisi" || t.status === "ditolak") {
-        counts.belum++;
-      } else if (t.status === "menunggu") {
-        counts.menunggu++;
-      } else if (t.status === "lunas") {
-        counts.lunas++;
-      }
+    // Hitung summary dari semua tagihan gabungan
+    let totalAll = 0,
+      belumAll = 0,
+      lunasAll = 0;
+    Object.values(_tagihanPerSiswaCache).forEach(({ tagihan }) => {
+      tagihan.forEach((t) => {
+        totalAll++;
+        if (
+          t.status === "belum" ||
+          t.status === "revisi" ||
+          t.status === "ditolak"
+        )
+          belumAll++;
+        else if (t.status === "lunas") lunasAll++;
+      });
     });
 
     const summaryEl = document.getElementById("summary-tagihan-ortu");
     if (summaryEl) {
       summaryEl.innerHTML = `
-        <div class="summary-tile" onclick="filterTagihanPage('semua')">
-          <div class="summary-tile-num">${counts.total}</div>
-          <div class="summary-tile-label">Total</div>
-        </div>
-        <div class="summary-tile warning" onclick="filterTagihanPage('belum')">
-          <div class="summary-tile-num">${counts.belum}</div>
-          <div class="summary-tile-label">Belum Lunas</div>
-        </div>
-        <div class="summary-tile success" onclick="filterTagihanPage('lunas')">
-          <div class="summary-tile-num">${counts.lunas}</div>
-          <div class="summary-tile-label">Sudah Lunas</div>
-        </div>
-      `;
+                <div class="summary-tile">
+                    <div class="summary-tile-num">${totalAll}</div>
+                    <div class="summary-tile-label">Total</div>
+                </div>
+                <div class="summary-tile warning">
+                    <div class="summary-tile-num">${belumAll}</div>
+                    <div class="summary-tile-label">Belum Lunas</div>
+                </div>
+                <div class="summary-tile success">
+                    <div class="summary-tile-num">${lunasAll}</div>
+                    <div class="summary-tile-label">Lunas</div>
+                </div>
+            `;
     }
 
     renderFilteredTagihan();
   } catch (err) {
-    console.error("Gagal load tagihan:", err);
+    console.error(err);
     Helpers.errorState("tagihan-ortu-list", "Gagal memuat: " + err.message);
   }
 }
@@ -85,18 +90,10 @@ async function loadTagihanOrtuPage() {
 function filterTagihanPage(filter, el) {
   _currentFilter = filter;
   if (el) {
-    document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
+    document
+      .querySelectorAll(".filter-chip")
+      .forEach((c) => c.classList.remove("active"));
     el.classList.add("active");
-  } else {
-    const chips = document.querySelectorAll(".filter-chip");
-    chips.forEach((c) => {
-      const match =
-        (filter === "semua" && c.textContent.includes("Semua")) ||
-        (filter === "belum" && c.textContent.includes("Belum")) ||
-        (filter === "lunas" && c.textContent.includes("Sudah"));
-      if (match) c.classList.add("active");
-      else c.classList.remove("active");
-    });
   }
   renderFilteredTagihan();
 }
@@ -105,68 +102,108 @@ function renderFilteredTagihan() {
   const container = document.getElementById("tagihan-ortu-list");
   if (!container) return;
 
-  if (_allTagihanCache.length === 0) {
-    const siswaIds = Auth.getSiswaIds();
-    if (siswaIds.length === 0) {
-      container.innerHTML = `
-        <div class="card" style="background:#fffbeb;border-color:#fde68a;padding:20px;text-align:center">
-          <div class="empty-state-icon" style="color:#d97706;background:#fef3c7">${Icons.students}</div>
-          <div class="font-bold text-sm" style="color:#b45309">Data Siswa Belum Terhubung</div>
-          <p class="text-xs text-secondary mt-4">
-            Silakan buka Beranda dan hubungkan akun Anda dengan Nama/NIS anak Anda.
-          </p>
-          <button class="btn btn-primary btn-sm mt-12" onclick="Router.go('dashboard-ortu')">
-            Kembali ke Beranda
-          </button>
-        </div>
-      `;
-    } else {
-      Helpers.emptyState("tagihan-ortu-list", Icons.receipt, "Belum ada daftar tagihan.");
+  const entries = Object.values(_tagihanPerSiswaCache);
+
+  // Kalau tidak ada data sama sekali
+  if (entries.length === 0) {
+    container.innerHTML = `
+            <div class="card" style="text-align:center;padding:24px">
+                <p class="text-sm" style="color:var(--warning)">
+                    ⚠️ Belum ada data anak yang terhubung.<br>
+                    Buka Beranda dan hubungkan data anak Anda.
+                </p>
+                <button class="btn btn-primary btn-sm mt-12"
+                        onclick="Router.go('dashboard-ortu')">
+                    Ke Beranda
+                </button>
+            </div>
+        `;
+    return;
+  }
+
+  let html = "";
+  let adaTagihan = false;
+
+  entries.forEach(({ siswa, tagihan }) => {
+    // Filter tagihan sesuai filter aktif
+    let filtered = tagihan;
+    if (_currentFilter === "belum") {
+      filtered = tagihan.filter(
+        (t) =>
+          t.status === "belum" ||
+          t.status === "revisi" ||
+          t.status === "ditolak",
+      );
+    } else if (_currentFilter === "menunggu") {
+      filtered = tagihan.filter((t) => t.status === "menunggu");
+    } else if (_currentFilter === "lunas") {
+      filtered = tagihan.filter((t) => t.status === "lunas");
     }
-    return;
-  }
 
-  let list = _allTagihanCache;
-  if (_currentFilter === "belum") {
-    list = list.filter((t) => t.status === "belum" || t.status === "revisi" || t.status === "ditolak");
-  } else if (_currentFilter === "menunggu") {
-    list = list.filter((t) => t.status === "menunggu");
-  } else if (_currentFilter === "lunas") {
-    list = list.filter((t) => t.status === "lunas");
-  }
+    // Skip siswa yang tidak punya tagihan di filter ini
+    if (filtered.length === 0) return;
+    adaTagihan = true;
 
-  if (list.length === 0) {
-    Helpers.emptyState("tagihan-ortu-list", Icons.search, "Tidak ada tagihan pada filter ini.");
-    return;
-  }
+    // Header per anak
+    html += `
+            <div style="margin-bottom:4px;margin-top:12px">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 4px">
+                    <div style="
+                        width:36px;height:36px;border-radius:50%;
+                        background:var(--primary);color:white;
+                        display:flex;align-items:center;justify-content:center;
+                        font-weight:700;font-size:16px;flex-shrink:0
+                    ">${siswa.nama.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div style="font-weight:600;font-size:15px">${siswa.nama}</div>
+                        <div style="font-size:12px;color:var(--text-secondary)">
+                            ${siswa.kelas || "-"} &middot; NIS: ${siswa.nis || "-"}
+                        </div>
+                    </div>
+                    <div style="margin-left:auto">
+                        <span class="badge" style="background:var(--primary-light);color:var(--primary)">
+                            ${filtered.length} tagihan
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
 
-  container.innerHTML = list
-    .map((t) => {
+    // Tagihan per anak
+    filtered.forEach((t) => {
       const isLunas = t.status === "lunas";
-      const isBelum = t.status === "belum" || t.status === "revisi" || t.status === "ditolak";
-      const icon = isLunas ? Icons.checkCircle : isBelum ? Icons.wallet : Icons.clock;
-      const jatuhTempo = t.jatuhTempo ? `Jatuh tempo: ${t.jatuhTempo}` : "";
+      const isBelum =
+        t.status === "belum" || t.status === "revisi" || t.status === "ditolak";
 
-      return `
-        <div class="bill-card" onclick="Router.go('detail-tagihan', '${t.id}')">
-          <div class="bill-card-left">
-            <div class="bill-icon-box" style="${isLunas ? 'background:#dcfce7;color:#16a34a' : ''}">
-              ${icon}
+      html += `
+                <div class="bill-card" onclick="Router.go('detail-tagihan', '${t.id}')"
+                     style="margin-left:12px;border-left:3px solid var(--primary)">
+                    <div class="bill-card-left">
+                        <div class="bill-card-info">
+                            <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
+                            <div class="bill-card-meta">
+                                ${t.jatuhTempo ? `<span>Jatuh tempo: ${t.jatuhTempo}</span>` : ""}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bill-card-right">
+                        <div class="bill-card-amount">${Helpers.rupiah(t.nominal)}</div>
+                        ${Helpers.badge(t.status)}
+                    </div>
+                </div>
+            `;
+    });
+  });
+
+  if (!adaTagihan) {
+    container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📄</div>
+                <div class="empty-state-text">Tidak ada tagihan pada filter ini</div>
             </div>
-            <div class="bill-card-info">
-              <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
-              <div class="bill-card-meta">
-                <span>${t.namaSiswa || "Siswa"}</span>
-                ${jatuhTempo ? `<span>&bull;</span><span>${jatuhTempo}</span>` : ""}
-              </div>
-            </div>
-          </div>
-          <div class="bill-card-right">
-            <div class="bill-card-amount">${Helpers.rupiah(t.nominal)}</div>
-            ${Helpers.badge(t.status)}
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+        `;
+    return;
+  }
+
+  container.innerHTML = html;
 }

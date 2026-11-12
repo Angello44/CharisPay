@@ -68,8 +68,30 @@ async function getTagihanOrtu() {
   return tagihan;
 }
 
-/** Ambil daftar siswa yang terhubung ke ortu ini */
-async function getSiswaOrtu() {
+/** Ambil tagihan dikelompokkan per siswa — untuk tampilan multi anak */
+async function getTagihanOrtuPerSiswa() {
+    const siswaList = await getSiswaOrtu();
+    if (siswaList.length === 0) return {};
+
+    const result = {}; // { siswaId: { siswa: {...}, tagihan: [...] } }
+
+    for (const siswa of siswaList) {
+        const snap = await db.collection("tagihan")
+            .where("siswaId", "==", siswa.id)
+            .get();
+
+        const tagihan = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        tagihan.sort((a, b) => {
+            const ta = a.createdAt ? a.createdAt.toMillis() : 0;
+            const tb = b.createdAt ? b.createdAt.toMillis() : 0;
+            return tb - ta;
+        });
+
+        result[siswa.id] = { siswa, tagihan };
+    }
+
+    return result;
+}
   const uid = Auth.getUid();
   const siswaIds = Auth.getSiswaIds();
 
