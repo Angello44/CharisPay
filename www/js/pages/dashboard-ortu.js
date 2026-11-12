@@ -61,13 +61,14 @@ Router.register("dashboard-ortu", {
                         <label>Cari dengan Nama atau NIS</label>
                         <div style="display:flex;gap:8px">
                             <input type="text" id="input-cari-anak"
-                                   placeholder="cth: Budi atau 2024001"
+                                   placeholder="cth: Budi Santoso atau NIS 2024001"
                                    style="flex:1"
                                    onkeydown="if(event.key==='Enter') cariSiswaOrtu()">
                             <button class="btn btn-primary btn-sm"
                                     style="white-space:nowrap"
                                     onclick="cariSiswaOrtu()">Cari</button>
                         </div>
+                        <div class="form-hint">Masukkan nama lengkap atau Nomor Induk Siswa (NIS)</div>
                     </div>
 
                     <!-- Hasil pencarian -->

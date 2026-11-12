@@ -13,7 +13,7 @@ Router.register("data-siswa", {
   render() {
     return `
       <div class="form-group">
-        <input type="text" id="search-siswa" placeholder="🔍 Cari nama / NIS...">
+        <input type="text" id="search-siswa" placeholder="🔍 Cari nama siswa atau NIS...">
       </div>
       <div id="siswa-list"><div class="loading">Memuat data siswa...</div></div>
 
@@ -25,11 +25,11 @@ Router.register("data-siswa", {
 
           <div class="form-group">
             <label>Nama Lengkap Siswa</label>
-            <input type="text" id="siswa-nama" placeholder="Nama lengkap siswa">
+            <input type="text" id="siswa-nama" placeholder="cth: Budi Santoso">
           </div>
           <div class="form-group">
             <label>NIS</label>
-            <input type="text" id="siswa-nis" placeholder="Nomor Induk Siswa">
+            <input type="text" id="siswa-nis" placeholder="cth: 2024001 (Nomor Induk Siswa)">
           </div>
           <div class="form-group">
             <label>Kelas</label>
@@ -54,7 +54,7 @@ Router.register("data-siswa", {
             <label>Email Akun Orang Tua / Wali</label>
             <div style="display:flex;gap:8px">
               <input type="email" id="siswa-ortu-email"
-                     placeholder="email@contoh.com (opsional)"
+                     placeholder="email@contoh.com — email yang dipakai ortu saat daftar"
                      style="flex:1">
               <button class="btn btn-secondary btn-sm"
                       style="white-space:nowrap"

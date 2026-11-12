@@ -23,7 +23,7 @@ Router.register("verifikasi", {
                     <div id="verif-form-error" class="form-error" style="margin-bottom:8px"></div>
                     <div class="form-group">
                         <label>Catatan (untuk revisi/tolak)</label>
-                        <textarea id="verif-catatan" placeholder="Tulis alasan jika pembayaran perlu revisi atau ditolak..."></textarea>
+                        <textarea id="verif-catatan" placeholder="Contoh: Foto bukti transfer tidak jelas, nominal tidak sesuai, dll..."></textarea>
                     </div>
                     <input type="hidden" id="verif-transaksi-id">
                     <input type="hidden" id="verif-tagihan-id">
