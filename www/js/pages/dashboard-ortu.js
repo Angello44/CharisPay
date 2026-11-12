@@ -207,7 +207,11 @@ async function loadDashboardOrtu() {
 
     const counts = { total: tagihan.length, belum: 0, menunggu: 0, lunas: 0 };
     tagihan.forEach((t) => {
-      if (t.status === "belum" || t.status === "revisi" || t.status === "ditolak") {
+      if (
+        t.status === "belum" ||
+        t.status === "revisi" ||
+        t.status === "ditolak"
+      ) {
         counts.belum++;
       } else if (t.status === "menunggu") {
         counts.menunggu++;
@@ -237,7 +241,10 @@ async function loadDashboardOrtu() {
     renderTagihanTerkini(tagihan);
   } catch (err) {
     console.error("Gagal load dashboard ortu:", err);
-    Helpers.errorState("dashboard-tagihan-terbaru", "Gagal memuat data: " + err.message);
+    Helpers.errorState(
+      "dashboard-tagihan-terbaru",
+      "Gagal memuat data: " + err.message,
+    );
   }
 }
 
@@ -264,7 +271,8 @@ function renderIdentitasSiswa(siswaList) {
   }
 
   const siswaUtama = siswaList[0];
-  const infoExtra = siswaList.length > 1 ? ` (+${siswaList.length - 1} anak)` : "";
+  const infoExtra =
+    siswaList.length > 1 ? ` (+${siswaList.length - 1} anak)` : "";
 
   container.innerHTML = `
     <div class="student-banner-card">
@@ -291,13 +299,17 @@ function renderHeroTagihan(tagihan, siswaList) {
   if (!heroContainer) return;
 
   const tagihanAktif = tagihan.find(
-    (t) => t.status === "belum" || t.status === "revisi" || t.status === "ditolak"
+    (t) =>
+      t.status === "belum" || t.status === "revisi" || t.status === "ditolak",
   );
   const tagihanMenunggu = tagihan.find((t) => t.status === "menunggu");
 
   if (tagihanAktif) {
-    const jatuhTempo = tagihanAktif.jatuhTempo ? `Jatuh tempo: ${tagihanAktif.jatuhTempo}` : "Harap bayar tepat waktu";
-    const statusLabel = tagihanAktif.status === "revisi" ? "Perlu Revisi Bukti" : "Belum Dibayar";
+    const jatuhTempo = tagihanAktif.jatuhTempo
+      ? `Jatuh tempo: ${tagihanAktif.jatuhTempo}`
+      : "Harap bayar tepat waktu";
+    const statusLabel =
+      tagihanAktif.status === "revisi" ? "Perlu Revisi Bukti" : "Belum Dibayar";
 
     heroContainer.innerHTML = `
       <div class="hero-bill-card">
@@ -389,7 +401,7 @@ function renderTagihanTerkini(tagihan) {
       return `
         <div class="bill-card" onclick="Router.go('detail-tagihan', '${t.id}')">
           <div class="bill-card-left">
-            <div class="bill-icon-box" style="${isLunas ? 'background:#dcfce7;color:#16a34a' : ''}">
+            <div class="bill-icon-box" style="${isLunas ? "background:#dcfce7;color:#16a34a" : ""}">
               ${icon}
             </div>
             <div class="bill-card-info">
@@ -416,7 +428,8 @@ function aksiBayarSPP() {
     return;
   }
   const belum = _currentTagihanList.find(
-    (t) => t.status === "belum" || t.status === "revisi" || t.status === "ditolak"
+    (t) =>
+      t.status === "belum" || t.status === "revisi" || t.status === "ditolak",
   );
   if (belum) {
     Router.go("pembayaran", belum.id);
@@ -428,13 +441,15 @@ function aksiBayarSPP() {
 function hubungiAdminWA() {
   const noWA = "6281234567890";
   const pesan = encodeURIComponent(
-    `Halo Admin Keuangan Charis Institute, saya orang tua siswa ingin berkonsultasi mengenai pembayaran SPP.`
+    `Halo Admin Keuangan Charis Institute, saya orang tua siswa ingin berkonsultasi mengenai pembayaran SPP.`,
   );
   window.open(`https://wa.me/${noWA}?text=${pesan}`, "_blank");
 }
 
 async function konfirmasiLogout() {
-  const ok = await Helpers.confirm("Apakah Bapak/Ibu yakin ingin keluar dari aplikasi?");
+  const ok = await Helpers.confirm(
+    "Apakah Bapak/Ibu yakin ingin keluar dari aplikasi?",
+  );
   if (ok) {
     Auth.logout();
   }
@@ -476,7 +491,7 @@ async function bukaModalWaliKelas() {
             <span class="card-value font-semibold">${wali.noHp}</span>
           </div>
           <button class="btn btn-success btn-sm mt-8 w-full"
-                  onclick="window.open('https://wa.me/${wali.noHp.replace(/[^0-9]/g, '')}?text=Halo%20Bapak%2FIbu%20Wali%20Kelas%2C%20saya%20wali%20dari%20${encodeURIComponent(s.nama)}', '_blank')">
+                  onclick="window.open('https://wa.me/${wali.noHp.replace(/[^0-9]/g, "")}?text=Halo%20Bapak%2FIbu%20Wali%20Kelas%2C%20saya%20wali%20dari%20${encodeURIComponent(s.nama)}', '_blank')">
             ${Icons.chat} Hubungi via WhatsApp
           </button>
         `
@@ -514,13 +529,7 @@ function renderModalAnakTerhubung() {
   if (!container) return;
 
   if (!_currentSiswaList || _currentSiswaList.length === 0) {
-    container.innerHTML = `
-      <div class="card" style="background:var(--warning-light);border-color:var(--warning-border)">
-        <p class="text-sm" style="color:var(--warning-dark)">
-          Belum ada anak yang terdaftar di akun ini.
-        </p>
-      </div>
-    `;
+    container.innerHTML = ""; // kosongkan saja, tidak perlu pesan warning di sini
     return;
   }
 
@@ -540,7 +549,7 @@ function renderModalAnakTerhubung() {
           </button>
         </div>
       </div>
-    `
+    `,
       )
       .join("")}
   `;
@@ -558,7 +567,10 @@ async function cariSiswaOrtu() {
   hasilEl.innerHTML = `<div class="loading">Mencari data siswa...</div>`;
 
   try {
-    const nisSap = await db.collection("siswa").where("nis", "==", keyword).get();
+    const nisSap = await db
+      .collection("siswa")
+      .where("nis", "==", keyword)
+      .get();
     const namaSnap = await db
       .collection("siswa")
       .where("nama", ">=", keyword)
@@ -640,12 +652,15 @@ async function hubungkanAnak(siswaId, namaSiswa, kelas) {
   try {
     const uid = Auth.getUid();
 
-    await db.collection("siswa").doc(siswaId).update({
-      ortuId: uid,
-      ortuNama: Auth.profile ? Auth.profile.nama : "",
-      ortuEmail: Auth.user ? Auth.user.email : "",
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+    await db
+      .collection("siswa")
+      .doc(siswaId)
+      .update({
+        ortuId: uid,
+        ortuNama: Auth.profile ? Auth.profile.nama : "",
+        ortuEmail: Auth.user ? Auth.user.email : "",
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
 
     const siswaIds = Auth.getSiswaIds();
     if (!siswaIds.includes(siswaId)) siswaIds.push(siswaId);
@@ -663,7 +678,7 @@ async function hubungkanAnak(siswaId, namaSiswa, kelas) {
 
 async function lepasAnak(siswaId, namaSiswa) {
   const ok = await Helpers.confirm(
-    `Apakah Bapak/Ibu yakin ingin melepas "${namaSiswa}" dari akun ini?`
+    `Apakah Bapak/Ibu yakin ingin melepas "${namaSiswa}" dari akun ini?`,
   );
   if (!ok) return;
 
