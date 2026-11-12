@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // Helper functions
+    // ============================================================
+
+    // Cek apakah user sudah login
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Ambil data profil user dari Firestore
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Cek role
+    function isAdmin() {
+      return isLoggedIn() && userDoc().role == 'admin';
+    }
+
+    function isOrtu() {
+      return isLoggedIn() && userDoc().role == 'ortu';
+    }
+
+    // ============================================================
+    // Koleksi: users
+    // ============================================================
+    match /users/{userId} {
+      // User hanya bisa baca & update data sendiri
+      // Admin bisa baca semua
+      allow read: if isLoggedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isLoggedIn() && request.auth.uid == userId;
+      allow update: if isLoggedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Koleksi: siswa
+    // ============================================================
+    match /siswa/{siswaId} {
+      // Admin bisa semua
+      // Ortu bisa baca SEMUA siswa (untuk fitur cari anak pakai nama/NIS)
+      // Tapi hanya admin yang bisa create/delete
+      allow read: if isLoggedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (
+        // Ortu boleh update field relasi di dokumen siswa mereka
+        isOrtu() && (
+          resource.data.ortuId == '' ||
+          resource.data.ortuId == null ||
+          resource.data.ortuId == request.auth.uid
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Koleksi: tagihan
+    // ============================================================
+    match /tagihan/{tagihanId} {
+      // Admin bisa semua
+      // Ortu hanya bisa baca tagihan siswa mereka
+      allow read: if isLoggedIn() && (
+        isAdmin() ||
+        (isOrtu() && resource.data.siswaId in userDoc().siswaIds)
+      );
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Koleksi: transaksi
+    // ============================================================
+    match /transaksi/{transaksiId} {
+      // Admin bisa semua
+      // Ortu bisa baca transaksi milik mereka & buat transaksi baru
+      allow read: if isLoggedIn() && (
+        isAdmin() ||
+        (isOrtu() && resource.data.uid == request.auth.uid)
+      );
+      allow create: if isLoggedIn() && (
+        isAdmin() ||
+        // Ortu hanya bisa buat transaksi untuk diri sendiri
+        (isOrtu() && request.resource.data.uid == request.auth.uid)
+      );
+      // Hanya admin yang bisa update status (verifikasi)
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Koleksi: nilai
+    // ============================================================
+    match /nilai/{nilaiId} {
+      // Admin bisa semua
+      // Ortu hanya bisa baca nilai siswa mereka
+      allow read: if isLoggedIn() && (
+        isAdmin() ||
+        (isOrtu() && resource.data.siswaId in userDoc().siswaIds)
+      );
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Koleksi: walikelas
+    // ============================================================
+    match /walikelas/{waliId} {
+      // Semua user login bisa baca (ortu perlu lihat wali kelas)
+      allow read: if isLoggedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+  }
+}
