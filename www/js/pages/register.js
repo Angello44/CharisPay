@@ -138,26 +138,57 @@ Router.register("register", {
 
       Helpers.btnLoading("btn-register", "Mendaftarkan...");
       try {
-        // 1. Buat akun Firebase Auth
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        const cleanEmail = email.trim().toLowerCase();
 
-        // 2. Simpan data profil ke Firestore
+        // 1. Buat akun Firebase Auth
+        const cred = await auth.createUserWithEmailAndPassword(cleanEmail, password);
+
+        // 2. Cari apakah admin sudah mendaftarkan siswa dengan email ortu ini
+        let autoSiswaIds = [];
+        try {
+          const siswaSnap = await db
+            .collection("siswa")
+            .where("ortuEmail", "==", cleanEmail)
+            .get();
+
+          if (!siswaSnap.empty) {
+            autoSiswaIds = siswaSnap.docs.map((d) => d.id);
+            // Update siswa agar langsung terhubung ke UID dan nama ortu
+            const batch = db.batch();
+            siswaSnap.docs.forEach((doc) => {
+              batch.update(doc.ref, {
+                ortuId: cred.user.uid,
+                ortuNama: nama,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+            });
+            await batch.commit();
+          }
+        } catch (linkErr) {
+          console.warn("Auto-link siswa saat register gagal:", linkErr);
+        }
+
+        // 3. Simpan data profil ke Firestore
         await db
           .collection("users")
           .doc(cred.user.uid)
           .set({
             nama,
             nohp: nohp || "",
-            email,
+            email: cleanEmail,
             role: "ortu",
-            siswaIds: [],
+            siswaIds: autoSiswaIds,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
 
-        // 3. Load profil
+        // 4. Load profil
         await Auth.loadProfile();
 
-        Router.toast("Pendaftaran berhasil! Silakan tambahkan data anak Anda.");
+        if (autoSiswaIds.length > 0) {
+          Router.toast(`Pendaftaran berhasil! Terhubung dengan ${autoSiswaIds.length} data anak.`);
+        } else {
+          Router.toast("Pendaftaran berhasil! Selamat datang di aplikasi SPP.");
+        }
         Router.go("dashboard-ortu");
       } catch (err) {
         console.error("Register error:", err);

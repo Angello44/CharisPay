@@ -200,7 +200,7 @@ async function loadSiswaBelumBayar(periode) {
 
     if (snap.empty) {
       container.innerHTML =
-        '<p class="text-sm text-secondary" style="padding:8px">Semua siswa sudah membayar 🎉</p>';
+        `<p class="text-sm text-secondary" style="padding:8px;display:flex;align-items:center;gap:6px">${Icons.checkCircle} Semua siswa sudah membayar</p>`;
       return;
     }
 

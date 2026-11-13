@@ -24,6 +24,10 @@ Router.register("tagihan-admin", {
                     <option value="revisi">Perlu Revisi</option>
                     <option value="ditolak">Ditolak</option>
                 </select>
+                <select id="filter-kelas-tagihan"
+                        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                    <option value="">Semua Jenjang/Kelas</option>
+                </select>
             </div>
 
             <div id="summary-tagihan" class="summary-grid" style="margin-top:12px"></div>
@@ -41,7 +45,7 @@ Router.register("tagihan-admin", {
                             onclick="tutupModalPilihJenis(); showFormBulkTagihan()">
                         ${Icons.students} Semua Siswa (Massal)
                         <span style="display:block;font-size:12px;font-weight:400;opacity:0.85">
-                            Buat tagihan satu periode untuk semua siswa sekaligus
+                            Buat tagihan satu periode untuk semua siswa / per jenjang
                         </span>
                     </button>
 
@@ -58,12 +62,18 @@ Router.register("tagihan-admin", {
             </div>
 
             <!-- =====================================================
-                 Modal Bulk Tagihan (semua siswa)
+                 Modal Bulk Tagihan (semua siswa / per jenjang / kelas)
                  ===================================================== -->
             <div id="modal-bulk-tagihan" class="modal-overlay hidden">
                 <div class="modal" style="max-height:90vh;overflow-y:auto">
-                    <div class="modal-title">Buat Tagihan Semua Siswa</div>
+                    <div class="modal-title">Buat Tagihan Siswa (Massal)</div>
                     <div id="bulk-form-error" class="form-error" style="margin-bottom:10px"></div>
+
+                    <div class="form-group">
+                        <label>Target Jenjang / Kelas</label>
+                        <select id="bulk-kelas"></select>
+                        <div class="form-hint">Pilih seluruh jenjang (TK / SD / SMP) atau kelas spesifik</div>
+                    </div>
 
                     <div class="form-group">
                         <label>Periode (Bulan/Tahun)</label>
@@ -80,21 +90,6 @@ Router.register("tagihan-admin", {
                     <div class="form-group">
                         <label>Keterangan (opsional)</label>
                         <input type="text" id="bulk-keterangan" placeholder="cth: SPP Desember 2026">
-                    </div>
-
-                    <!-- Filter kelas (opsional) -->
-                    <div class="form-group">
-                        <label>Filter Kelas (kosongkan = semua kelas)</label>
-                        <select id="bulk-kelas">
-                            <option value="">Semua Kelas</option>
-                            <option>X IPA 1</option><option>X IPA 2</option>
-                            <option>X IPS 1</option><option>X IPS 2</option>
-                            <option>XI IPA 1</option><option>XI IPA 2</option>
-                            <option>XI IPS 1</option><option>XI IPS 2</option>
-                            <option>XII IPA 1</option><option>XII IPA 2</option>
-                            <option>XII IPS 1</option><option>XII IPS 2</option>
-                        </select>
-                        <div class="form-hint">Kosongkan untuk buat tagihan ke semua kelas sekaligus</div>
                     </div>
 
                     <!-- Preview jumlah siswa -->
@@ -190,14 +185,90 @@ Router.register("tagihan-admin", {
   },
 
   async init() {
+    const filterKelasEl = document.getElementById("filter-kelas-tagihan");
+    if (filterKelasEl) {
+      filterKelasEl.innerHTML = getBulkKelasOptions("Semua Jenjang/Kelas");
+      filterKelasEl.addEventListener("change", () => loadTagihanAdmin());
+    }
+
+    const filterStatusEl = document.getElementById("filter-status-tagihan");
+    if (filterStatusEl) {
+      filterStatusEl.addEventListener("change", () => loadTagihanAdmin());
+    }
+
     await loadTagihanAdmin();
-    document
-      .getElementById("filter-status-tagihan")
-      .addEventListener("change", function () {
-        loadTagihanAdmin(this.value);
-      });
   },
 });
+
+/* ============================================================
+   Helper Pilihan Jenjang & Kelas (Charis Institute: TK, SD, SMP)
+   ============================================================ */
+
+function getBulkKelasOptions(labelSemua = "Semua Siswa (Semua Jenjang)") {
+  const groups = [
+    {
+      label: "Berdasarkan Jenjang / Tingkat",
+      items: [
+        { val: "TINGKAT:TK", label: "Seluruh Jenjang TK (KBTK, TKA, TKB)" },
+        { val: "TINGKAT:SD", label: "Seluruh Jenjang SD (SD 1A - SD 6C)" },
+        { val: "TINGKAT:SMP", label: "Seluruh Jenjang SMP (SMP 1A - SMP 3C)" },
+      ],
+    },
+    {
+      label: "Kelas TK",
+      items: ["KBTK", "TKA", "TKB"].map((k) => ({ val: k, label: k })),
+    },
+    {
+      label: "Kelas SD",
+      items: DAFTAR_KELAS.filter((k) => k.startsWith("SD")).map((k) => ({
+        val: k,
+        label: k,
+      })),
+    },
+    {
+      label: "Kelas SMP",
+      items: DAFTAR_KELAS.filter((k) => k.startsWith("SMP")).map((k) => ({
+        val: k,
+        label: k,
+      })),
+    },
+  ];
+
+  let html = `<option value="">${labelSemua}</option>`;
+  groups.forEach((g) => {
+    html += `<optgroup label="${g.label}">`;
+    g.items.forEach((item) => {
+      html += `<option value="${item.val}">${item.label}</option>`;
+    });
+    html += "</optgroup>";
+  });
+  return html;
+}
+
+async function getSiswaByKelasFilter(filterVal) {
+  const snap = await db.collection("siswa").get();
+  if (snap.empty) return [];
+
+  const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  if (!filterVal) {
+    return all;
+  }
+  if (filterVal === "TINGKAT:TK") {
+    return all.filter(
+      (s) =>
+        ["KBTK", "TKA", "TKB"].includes(s.kelas) ||
+        (s.kelas && s.kelas.startsWith("TK")),
+    );
+  }
+  if (filterVal === "TINGKAT:SD") {
+    return all.filter((s) => s.kelas && s.kelas.startsWith("SD"));
+  }
+  if (filterVal === "TINGKAT:SMP") {
+    return all.filter((s) => s.kelas && s.kelas.startsWith("SMP"));
+  }
+  return all.filter((s) => s.kelas === filterVal);
+}
 
 /* ============================================================
    Load & Render Tagihan
@@ -205,14 +276,19 @@ Router.register("tagihan-admin", {
 
 let _tagihanAdminCached = [];
 
-async function loadTagihanAdmin(filterStatus = "") {
+async function loadTagihanAdmin() {
   Helpers.loading("tagihan-admin-list");
   try {
+    const filterStatusEl = document.getElementById("filter-status-tagihan");
+    const filterKelasEl = document.getElementById("filter-kelas-tagihan");
+    const filterStatus = filterStatusEl ? filterStatusEl.value : "";
+    const filterKelas = filterKelasEl ? filterKelasEl.value : "";
+
     let query = db.collection("tagihan");
     if (filterStatus) query = query.where("status", "==", filterStatus);
     const snap = await query.get();
 
-    // Summary
+    // Summary dari semua tagihan
     const all = await db.collection("tagihan").get();
     const counts = { belum: 0, menunggu: 0, lunas: 0, revisi: 0, ditolak: 0 };
     all.docs.forEach((d) => {
@@ -239,16 +315,46 @@ async function loadTagihanAdmin(filterStatus = "") {
       return;
     }
 
-    _tagihanAdminCached = snap.docs.map((doc) => ({
+    let list = snap.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-    _tagihanAdminCached.sort((a, b) => {
+
+    // Filter jenjang / kelas di client
+    if (filterKelas) {
+      if (filterKelas === "TINGKAT:TK") {
+        list = list.filter(
+          (t) =>
+            ["KBTK", "TKA", "TKB"].includes(t.kelas) ||
+            (t.kelas && t.kelas.startsWith("TK")),
+        );
+      } else if (filterKelas === "TINGKAT:SD") {
+        list = list.filter((t) => t.kelas && t.kelas.startsWith("SD"));
+      } else if (filterKelas === "TINGKAT:SMP") {
+        list = list.filter((t) => t.kelas && t.kelas.startsWith("SMP"));
+      } else {
+        list = list.filter((t) => t.kelas === filterKelas);
+      }
+    }
+
+    list.sort((a, b) => {
       const ta = a.createdAt ? a.createdAt.toMillis() : 0;
       const tb = b.createdAt ? b.createdAt.toMillis() : 0;
       return tb - ta;
     });
-    renderTagihanAdmin(_tagihanAdminCached);
+
+    _tagihanAdminCached = list;
+
+    if (list.length === 0) {
+      Helpers.emptyState(
+        "tagihan-admin-list",
+        Icons.search,
+        "Tidak ada tagihan yang sesuai dengan filter",
+      );
+      return;
+    }
+
+    renderTagihanAdmin(list);
   } catch (err) {
     console.error(err);
     Helpers.errorState("tagihan-admin-list", "Gagal memuat: " + err.message);
@@ -309,6 +415,11 @@ function tutupModalPilihJenis() {
    ============================================================ */
 
 function showFormBulkTagihan() {
+  // Isi dropdown target kelas / jenjang
+  document.getElementById("bulk-kelas").innerHTML = getBulkKelasOptions(
+    "Semua Siswa (Semua Jenjang)",
+  );
+
   // Default nilai
   const now = new Date();
   const bulanDepan = new Date(now.getFullYear(), now.getMonth() + 1, 20);
@@ -325,7 +436,7 @@ function showFormBulkTagihan() {
   document.getElementById("bulk-progress").style.display = "none";
   document.getElementById("modal-bulk-tagihan").classList.remove("hidden");
 
-  // Auto preview saat kelas dipilih
+  // Auto preview saat jenjang/kelas atau periode dipilih
   document.getElementById("bulk-kelas").onchange = previewBulk;
   document.getElementById("bulk-periode").onchange = previewBulk;
   previewBulk();
@@ -336,19 +447,22 @@ function tutupFormBulkTagihan() {
 }
 
 async function previewBulk() {
-  const kelas = document.getElementById("bulk-kelas").value;
+  const filterVal = document.getElementById("bulk-kelas").value;
   const periode = document.getElementById("bulk-periode").value;
-  if (!periode) return;
+  const previewEl = document.getElementById("bulk-preview");
+  const previewText = document.getElementById("bulk-preview-text");
+
+  if (!periode) {
+    previewEl.style.display = "none";
+    return;
+  }
 
   try {
-    // Hitung berapa siswa yang akan dibuatkan tagihan
-    let siswaQuery = db.collection("siswa");
-    if (kelas) siswaQuery = siswaQuery.where("kelas", "==", kelas);
-    const siswaSnap = await siswaQuery.get();
+    const siswaList = await getSiswaByKelasFilter(filterVal);
+    const totalSiswa = siswaList.length;
 
-    // Cek berapa yang sudah punya tagihan periode ini
     let sudahAda = 0;
-    if (!siswaSnap.empty) {
+    if (totalSiswa > 0) {
       const tagihanSnap = await db
         .collection("tagihan")
         .where("periode", "==", periode)
@@ -356,27 +470,29 @@ async function previewBulk() {
       const siswaIdDenganTagihan = new Set(
         tagihanSnap.docs.map((d) => d.data().siswaId),
       );
-      sudahAda = siswaSnap.docs.filter((d) =>
-        siswaIdDenganTagihan.has(d.id),
+      sudahAda = siswaList.filter((s) =>
+        siswaIdDenganTagihan.has(s.id),
       ).length;
     }
 
-    const totalSiswa = siswaSnap.size;
     const akanDibuat = totalSiswa - sudahAda;
-
-    const previewEl = document.getElementById("bulk-preview");
-    const previewText = document.getElementById("bulk-preview-text");
     previewEl.style.display = "block";
 
+    const kelasOpt = document.querySelector(
+      `#bulk-kelas option[value="${filterVal}"]`,
+    );
+    const labelKelas = kelasOpt ? kelasOpt.textContent : "Semua Siswa";
+
     if (totalSiswa === 0) {
-      previewText.innerHTML = `<span style="color:var(--danger)">Tidak ada siswa${kelas ? " di kelas " + kelas : ""}</span>`;
+      previewText.innerHTML = `<span style="color:var(--danger)">Tidak ada siswa terdaftar pada target: <strong>${labelKelas}</strong></span>`;
     } else {
       previewText.innerHTML = `
-                Total siswa: <strong>${totalSiswa}</strong>${kelas ? " (kelas " + kelas + ")" : ""}<br>
-                Sudah ada tagihan: <strong>${sudahAda}</strong><br>
-                Akan dibuat: <strong style="color:var(--primary)">${akanDibuat} tagihan baru</strong>
-                ${sudahAda > 0 ? "<br><span style='color:var(--warning);font-size:12px'>Siswa yang sudah punya tagihan periode ini akan dilewati</span>" : ""}
-            `;
+        Target: <strong>${labelKelas}</strong><br>
+        Total siswa: <strong>${totalSiswa}</strong><br>
+        Sudah ada tagihan periode ini: <strong>${sudahAda}</strong><br>
+        Akan dibuat: <strong style="color:var(--primary)">${akanDibuat} tagihan baru</strong>
+        ${sudahAda > 0 ? "<br><span style='color:var(--warning);font-size:12px'>Siswa yang sudah memiliki tagihan di periode ini dilewati otomatis</span>" : ""}
+      `;
     }
   } catch (err) {
     console.error(err);
@@ -388,7 +504,7 @@ async function buatTagihanBulk() {
   const nominal = document.getElementById("bulk-nominal").value;
   const jatuhTempo = document.getElementById("bulk-jatuh-tempo").value;
   const keterangan = document.getElementById("bulk-keterangan").value.trim();
-  const kelas = document.getElementById("bulk-kelas").value;
+  const filterVal = document.getElementById("bulk-kelas").value;
   const errEl = document.getElementById("bulk-form-error");
 
   // Validasi
@@ -405,19 +521,22 @@ async function buatTagihanBulk() {
     return;
   }
 
+  const kelasOpt = document.querySelector(
+    `#bulk-kelas option[value="${filterVal}"]`,
+  );
+  const labelKelas = kelasOpt ? kelasOpt.textContent : "semua siswa";
+
   const ok = await Helpers.confirm(
     `Buat tagihan SPP ${Helpers.periodeLabel(periode)} senilai ${Helpers.rupiah(parseInt(nominal))} ` +
-      `untuk ${kelas ? "kelas " + kelas : "semua siswa"}?`,
+      `untuk ${labelKelas}?`,
   );
   if (!ok) return;
 
-  // Ambil data siswa
-  let siswaQuery = db.collection("siswa");
-  if (kelas) siswaQuery = siswaQuery.where("kelas", "==", kelas);
-  const siswaSnap = await siswaQuery.get();
+  // Ambil data siswa sesuai filter kelas/jenjang
+  const siswaSnapList = await getSiswaByKelasFilter(filterVal);
 
-  if (siswaSnap.empty) {
-    errEl.textContent = "Tidak ada siswa" + (kelas ? " di kelas " + kelas : "");
+  if (siswaSnapList.length === 0) {
+    errEl.textContent = "Tidak ada siswa yang sesuai target";
     return;
   }
 
@@ -430,12 +549,10 @@ async function buatTagihanBulk() {
     tagihanSnap.docs.map((d) => d.data().siswaId),
   );
 
-  const siswaList = siswaSnap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .filter((s) => !siswaIdSudahAda.has(s.id)); // lewati yang sudah ada
+  const siswaList = siswaSnapList.filter((s) => !siswaIdSudahAda.has(s.id));
 
   if (siswaList.length === 0) {
-    errEl.textContent = "Semua siswa sudah punya tagihan untuk periode ini";
+    errEl.textContent = "Semua siswa target sudah memiliki tagihan untuk periode ini";
     return;
   }
 
@@ -462,6 +579,9 @@ async function buatTagihanBulk() {
         siswaId: siswa.id,
         namaSiswa: siswa.nama,
         kelas: siswa.kelas || "",
+        nis: siswa.nis || "",
+        ortuId: siswa.ortuId || "",
+        ortuNama: siswa.ortuNama || "",
         periode,
         nominal: parseInt(nominal),
         jatuhTempo,
@@ -508,7 +628,7 @@ async function showFormTagihan() {
   select.innerHTML = '<option value="">-- Pilih Siswa --</option>';
   snap.docs.forEach((doc) => {
     const s = doc.data();
-    select.innerHTML += `<option value="${doc.id}" data-nama="${s.nama}" data-kelas="${s.kelas || ""}">${s.nama} (${s.kelas || "-"})</option>`;
+    select.innerHTML += `<option value="${doc.id}" data-nama="${s.nama}" data-kelas="${s.kelas || ""}" data-nis="${s.nis || ""}" data-ortuid="${s.ortuId || ""}" data-ortunama="${s.ortuNama || ""}">${s.nama} (${s.kelas || "-"})</option>`;
   });
 
   const today = new Date().toISOString().split("T")[0];
@@ -562,6 +682,9 @@ async function simpanTagihan() {
   );
   const namaSiswa = siswaOpt ? siswaOpt.dataset.nama : "";
   const kelas = siswaOpt ? siswaOpt.dataset.kelas : "";
+  const nis = siswaOpt ? siswaOpt.dataset.nis : "";
+  const ortuId = siswaOpt ? siswaOpt.dataset.ortuid : "";
+  const ortuNama = siswaOpt ? siswaOpt.dataset.ortunama : "";
 
   Helpers.btnLoading("btn-simpan-tagihan", "Menyimpan...");
   try {
@@ -569,6 +692,9 @@ async function simpanTagihan() {
       siswaId,
       namaSiswa,
       kelas,
+      nis,
+      ortuId: ortuId || "",
+      ortuNama: ortuNama || "",
       periode,
       nominal: parseInt(nominal),
       jatuhTempo,
@@ -623,19 +749,38 @@ async function konfirmasiTunai() {
 
   Helpers.btnLoading("btn-konfirmasi-tunai", "Memproses...");
   try {
-    const tagihan = _tagihanAdminCached.find((t) => t.id === tagihanId);
+    const tagihan = _tagihanAdminCached.find((t) => t.id === tagihanId) || {};
+    let finalOrtuId = tagihan.ortuId || "";
+    let finalOrtuNama = tagihan.ortuNama || "";
+
+    // Sinkronkan ortuId dari profil siswa jika belum tercatat di tagihan
+    if (!finalOrtuId && tagihan.siswaId) {
+      try {
+        const siswaDoc = await db.collection("siswa").doc(tagihan.siswaId).get();
+        if (siswaDoc.exists) {
+          finalOrtuId = siswaDoc.data().ortuId || "";
+          finalOrtuNama = siswaDoc.data().ortuNama || "";
+        }
+      } catch (err) {
+        console.warn("Gagal cek ortuId siswa:", err);
+      }
+    }
 
     await db.collection("transaksi").add({
       tagihanId,
       siswaId: tagihan.siswaId || "",
       namaSiswa: tagihan.namaSiswa || "",
       kelas: tagihan.kelas || "",
+      nis: tagihan.nis || "",
       periode: tagihan.periode,
       nominal: tagihan.nominal,
       metode: "tunai",
       tanggal,
       keterangan,
       status: "lunas",
+      ortuId: finalOrtuId,
+      uid: finalOrtuId,
+      ortuNama: finalOrtuNama,
       verifiedBy: Auth.getUid(),
       verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -643,6 +788,8 @@ async function konfirmasiTunai() {
 
     await db.collection("tagihan").doc(tagihanId).update({
       status: "lunas",
+      ortuId: finalOrtuId,
+      ortuNama: finalOrtuNama,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 

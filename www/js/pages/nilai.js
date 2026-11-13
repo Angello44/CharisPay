@@ -101,27 +101,36 @@ async function loadNilaiAdmin(filterKelas = "") {
 
         const container = document.getElementById("nilai-admin-list");
         container.innerHTML = _nilaiAdminSiswaCached.map(s => {
-            // Cari nilai kelas saat ini (kelas terakhir sebelum naik)
+            const kelasSekarang = s.kelas;
             const kelasLama = getKelasSebelmunya(s.kelas);
-            const nilaiAda  = kelasLama ? nilaiMap[s.id + "_" + kelasLama] : null;
+
+            const nilaiSekarang = nilaiMap[s.id + "_" + kelasSekarang];
+            const nilaiLama     = kelasLama ? nilaiMap[s.id + "_" + kelasLama] : null;
+
+            // Prioritaskan kelas sekarang jika sudah ada, atau kelas sebelumnya
+            const targetKelas = nilaiSekarang ? kelasSekarang : (kelasLama ? kelasLama : kelasSekarang);
+            const nilaiAktif  = nilaiMap[s.id + "_" + targetKelas];
+
+            let statusNilaiHtml = "";
+            if (nilaiSekarang) {
+                statusNilaiHtml += `<div class="text-sm font-semibold" style="color:var(--success)">Nilai ${kelasSekarang}: <strong>${nilaiSekarang.nilaiRataRata}</strong> (${nilaiToPredikat(nilaiSekarang.nilaiRataRata).label})</div>`;
+            } else if (nilaiLama) {
+                statusNilaiHtml += `<div class="text-sm font-semibold" style="color:var(--success)">Nilai ${kelasLama}: <strong>${nilaiLama.nilaiRataRata}</strong> (${nilaiToPredikat(nilaiLama.nilaiRataRata).label})</div>`;
+            } else {
+                statusNilaiHtml = `<div class="text-sm text-secondary">Belum ada nilai rapor yang diinput</div>`;
+            }
 
             return `
                 <div class="list-item">
                     <div class="list-item-left">
                         <div class="list-item-title">${s.nama}</div>
-                        <div class="list-item-subtitle">${s.kelas} &middot; NIS: ${s.nis || "-"}</div>
-                        ${nilaiAda
-                            ? `<div class="text-sm" style="color:var(--success)">Nilai ${kelasLama}: <strong>${nilaiAda.nilaiRataRata}</strong></div>`
-                            : (kelasLama
-                                ? `<div class="text-sm text-secondary">Belum ada nilai untuk kelas ${kelasLama}</div>`
-                                : `<div class="text-sm text-secondary">Kelas pertama — belum ada nilai sebelumnya</div>`)
-                        }
+                        <div class="list-item-subtitle">Kelas Sekarang: ${s.kelas} &middot; NIS: ${s.nis || "-"}</div>
+                        ${statusNilaiHtml}
                     </div>
-                    ${kelasLama ? `
-                    <button class="btn btn-${nilaiAda ? 'secondary' : 'primary'} btn-sm"
-                            onclick="showFormNilai('${s.id}', '${s.nama}', '${kelasLama}', '${nilaiAda ? nilaiAda.id : ''}', '${nilaiAda ? nilaiAda.nilaiRataRata : ''}', '${nilaiAda ? nilaiAda.tahunAjaran || '' : ''}', '${nilaiAda ? nilaiAda.keterangan || '' : ''}')">
-                        ${nilaiAda ? "Edit" : "Input"}
-                    </button>` : ""}
+                    <button type="button" class="btn btn-${nilaiAktif ? 'secondary' : 'primary'} btn-sm"
+                            onclick="showFormNilai('${s.id}', '${s.nama}', '${targetKelas}', '${nilaiAktif ? nilaiAktif.id : ''}', '${nilaiAktif ? nilaiAktif.nilaiRataRata : ''}', '${nilaiAktif ? (nilaiAktif.tahunAjaran || '') : ''}', '${nilaiAktif ? (nilaiAktif.keterangan || '') : ''}')">
+                        ${nilaiAktif ? "Edit" : "Input"}
+                    </button>
                 </div>
             `;
         }).join("");
@@ -247,60 +256,49 @@ async function loadNilaiOrtu() {
                 </div>
             `;
 
-            if (!kelasLama) {
-                html += `
-                    <div class="card" style="background:var(--warning-light);border-color:var(--warning-border)">
-                        <p class="text-sm" style="color:var(--warning-dark)">
-                            ${siswa.nama} masih di kelas pertama (${siswa.kelas}). Nilai akan muncul setelah kenaikan kelas.
-                        </p>
-                    </div>
-                `;
-                continue;
-            }
-
-            // Ambil nilai kelas sebelumnya
+            // Ambil semua nilai yang sudah diinput untuk siswa ini
             const nilaiSnap = await db.collection("nilai")
                 .where("siswaId", "==", siswa.id)
-                .where("kelas", "==", kelasLama)
                 .get();
 
             if (nilaiSnap.empty) {
                 html += `
-                    <div class="card">
-                        <div class="card-title">Nilai Rapor Kelas ${kelasLama}</div>
-                        <p class="text-sm text-secondary">Nilai belum diinput oleh pihak sekolah.</p>
+                    <div class="card" style="background:#f8fafc;margin-bottom:16px">
+                        <div class="card-title">Nilai Rapor Siswa</div>
+                        <p class="text-sm text-secondary">Nilai rapor belum diinput oleh pihak sekolah untuk ${siswa.nama}.</p>
                     </div>
                 `;
             } else {
-                const n = nilaiSnap.docs[0].data();
-                const predikat = nilaiToPredikat(n.nilaiRataRata);
-
-                html += `
-                    <div class="card">
-                        <div class="card-title">Nilai Rapor Kelas ${kelasLama}</div>
-                        <div class="card-row">
-                            <span class="card-label">Tahun Ajaran</span>
-                            <span class="card-value">${n.tahunAjaran || "-"}</span>
+                const docs = nilaiSnap.docs.map(d => d.data());
+                docs.forEach(n => {
+                    const predikat = nilaiToPredikat(n.nilaiRataRata);
+                    html += `
+                        <div class="card" style="margin-bottom:14px">
+                            <div class="card-title">Nilai Rapor — Kelas ${n.kelas}</div>
+                            <div class="card-row">
+                                <span class="card-label">Tahun Ajaran</span>
+                                <span class="card-value">${n.tahunAjaran || "-"}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">Nilai Rata-rata</span>
+                                <span class="card-value font-semibold" style="font-size:24px;color:${predikat.warna}">
+                                    ${n.nilaiRataRata}
+                                </span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">Predikat</span>
+                                <span class="badge" style="background:${predikat.warna}20;color:${predikat.warna}">
+                                    ${predikat.label}
+                                </span>
+                            </div>
+                            ${n.keterangan ? `
+                            <div class="card-row">
+                                <span class="card-label">Catatan / Keterangan</span>
+                                <span class="card-value">${n.keterangan}</span>
+                            </div>` : ""}
                         </div>
-                        <div class="card-row">
-                            <span class="card-label">Nilai Rata-rata</span>
-                            <span class="card-value font-semibold" style="font-size:24px;color:${predikat.warna}">
-                                ${n.nilaiRataRata}
-                            </span>
-                        </div>
-                        <div class="card-row">
-                            <span class="card-label">Predikat</span>
-                            <span class="badge" style="background:${predikat.warna}20;color:${predikat.warna}">
-                                ${predikat.label}
-                            </span>
-                        </div>
-                        ${n.keterangan ? `
-                        <div class="card-row">
-                            <span class="card-label">Keterangan</span>
-                            <span class="card-value">${n.keterangan}</span>
-                        </div>` : ""}
-                    </div>
-                `;
+                    `;
+                });
             }
         }
 

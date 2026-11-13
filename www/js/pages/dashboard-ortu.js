@@ -1,5 +1,5 @@
 /* ============================================================
-   Dashboard Orang Tua (Clean Vector Icons UI)
+   Dashboard Orang Tua (Clean Vector Icons UI - Multi-Anak Support)
    ============================================================ */
 
 Router.register("dashboard-ortu", {
@@ -32,7 +32,7 @@ Router.register("dashboard-ortu", {
         </div>
       </div>
 
-      <!-- 2. Kartu Identitas Siswa Terhubung -->
+      <!-- 2. Kartu Identitas Siswa Terhubung / Multi-Anak Switcher -->
       <div id="section-identitas-siswa">
         <div class="student-banner-card">
           <div class="student-banner-left">
@@ -45,7 +45,7 @@ Router.register("dashboard-ortu", {
         </div>
       </div>
 
-      <!-- 3. Hero Highlight Card (Tagihan SPP Prioritas) -->
+      <!-- 3. Hero Highlight Card (Tagihan SPP Prioritas / Multi-Anak Breakdown) -->
       <div id="section-hero-tagihan">
         <div class="hero-bill-card">
           <div class="hero-label">Status Tagihan SPP</div>
@@ -192,53 +192,18 @@ Router.register("dashboard-ortu", {
 
 let _currentSiswaList = [];
 let _currentTagihanList = [];
+let _selectedSiswaFilter = "all"; // 'all' atau siswaId
 
 async function loadDashboardOrtu() {
   try {
     const siswaList = await getSiswaOrtu();
     _currentSiswaList = siswaList;
 
-    renderIdentitasSiswa(siswaList);
-
     const tagihan = await getTagihanOrtu();
     _currentTagihanList = tagihan;
 
-    renderHeroTagihan(tagihan, siswaList);
-
-    const counts = { total: tagihan.length, belum: 0, menunggu: 0, lunas: 0 };
-    tagihan.forEach((t) => {
-      if (
-        t.status === "belum" ||
-        t.status === "revisi" ||
-        t.status === "ditolak"
-      ) {
-        counts.belum++;
-      } else if (t.status === "menunggu") {
-        counts.menunggu++;
-      } else if (t.status === "lunas") {
-        counts.lunas++;
-      }
-    });
-
-    const summaryEl = document.getElementById("summary-dashboard-ortu");
-    if (summaryEl) {
-      summaryEl.innerHTML = `
-        <div class="summary-tile" onclick="Router.go('tagihan')">
-          <div class="summary-tile-num">${counts.total}</div>
-          <div class="summary-tile-label">Total Tagihan</div>
-        </div>
-        <div class="summary-tile warning" onclick="Router.go('tagihan')">
-          <div class="summary-tile-num">${counts.belum}</div>
-          <div class="summary-tile-label">Belum Lunas</div>
-        </div>
-        <div class="summary-tile success" onclick="Router.go('tagihan')">
-          <div class="summary-tile-num">${counts.lunas}</div>
-          <div class="summary-tile-label">Sudah Lunas</div>
-        </div>
-      `;
-    }
-
-    renderTagihanTerkini(tagihan);
+    renderIdentitasSiswa(siswaList);
+    updateDashboardView();
   } catch (err) {
     console.error("Gagal load dashboard ortu:", err);
     Helpers.errorState(
@@ -246,6 +211,25 @@ async function loadDashboardOrtu() {
       "Gagal memuat data: " + err.message,
     );
   }
+}
+
+/** Filter tampilan dashboard berdasarkan anak yang dipilih */
+function pilihFilterSiswaDashboard(siswaId) {
+  _selectedSiswaFilter = siswaId;
+  renderIdentitasSiswa(_currentSiswaList);
+  updateDashboardView();
+}
+
+/** Perbarui tampilan Hero, Summary, dan Tagihan Terkini sesuai filter siswa */
+function updateDashboardView() {
+  const filteredTagihan =
+    _selectedSiswaFilter === "all"
+      ? _currentTagihanList
+      : _currentTagihanList.filter((t) => t.siswaId === _selectedSiswaFilter);
+
+  renderHeroTagihan(filteredTagihan, _currentSiswaList, _selectedSiswaFilter);
+  renderSummaryTiles(filteredTagihan);
+  renderTagihanTerkini(filteredTagihan);
 }
 
 function renderIdentitasSiswa(siswaList) {
@@ -270,81 +254,202 @@ function renderIdentitasSiswa(siswaList) {
     return;
   }
 
-  const siswaUtama = siswaList[0];
-  const infoExtra =
-    siswaList.length > 1 ? ` (+${siswaList.length - 1} anak)` : "";
-
-  container.innerHTML = `
-    <div class="student-banner-card">
-      <div class="student-banner-left" onclick="showModalTambahAnak()" style="cursor:pointer">
-        <div class="student-badge-icon">${Icons.student}</div>
-        <div class="student-banner-details">
-          <div class="student-banner-title">${siswaUtama.nama}${infoExtra}</div>
-          <div class="student-banner-sub">
-            <span>Kelas ${siswaUtama.kelas || "-"}</span>
-            <span>&bull;</span>
-            <span>NIS: ${siswaUtama.nis || "-"}</span>
+  // Jika hanya ada 1 anak
+  if (siswaList.length === 1) {
+    const s = siswaList[0];
+    container.innerHTML = `
+      <div class="student-banner-card">
+        <div class="student-banner-left" onclick="showModalTambahAnak()" style="cursor:pointer">
+          <div class="student-badge-icon">${Icons.student}</div>
+          <div class="student-banner-details">
+            <div class="student-banner-title">${s.nama}</div>
+            <div class="student-banner-sub">
+              <span>Kelas ${s.kelas || "-"}</span>
+              <span>&bull;</span>
+              <span>NIS: ${s.nis || "-"}</span>
+            </div>
           </div>
         </div>
+        <button class="btn btn-secondary btn-sm student-banner-action" onclick="showModalTambahAnak()">
+          Kelola
+        </button>
       </div>
-      <button class="btn btn-secondary btn-sm student-banner-action" onclick="showModalTambahAnak()">
-        Kelola
-      </button>
+    `;
+    return;
+  }
+
+  // Jika memiliki 2 anak atau lebih (Multi-Anak)
+  const pillsHtml = `
+    <div class="filter-tabs" style="margin-top:8px;margin-bottom:0">
+      <div class="filter-chip ${_selectedSiswaFilter === "all" ? "active" : ""}"
+           onclick="pilihFilterSiswaDashboard('all')">
+        Semua Anak (${siswaList.length})
+      </div>
+      ${siswaList
+        .map(
+          (s) => `
+        <div class="filter-chip ${_selectedSiswaFilter === s.id ? "active" : ""}"
+             onclick="pilihFilterSiswaDashboard('${s.id}')">
+          ${s.nama.split(" ")[0]} (${s.kelas || "-"})
+        </div>
+      `,
+        )
+        .join("")}
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div class="student-banner-card" style="flex-direction:column;align-items:stretch">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="student-banner-left">
+          <div class="student-badge-icon" style="background:#e0e7ff;color:#4f46e5">${Icons.students}</div>
+          <div class="student-banner-details">
+            <div class="student-banner-title">Keluarga (${siswaList.length} Anak Terdaftar)</div>
+            <div class="student-banner-sub">
+              ${siswaList.map((s) => `${s.nama} (${s.kelas || "-"})`).join(" &bull; ")}
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm student-banner-action" onclick="showModalTambahAnak()">
+          Kelola
+        </button>
+      </div>
+      ${pillsHtml}
     </div>
   `;
 }
 
-function renderHeroTagihan(tagihan, siswaList) {
+function renderHeroTagihan(tagihan, siswaList, filterSiswaId) {
   const heroContainer = document.getElementById("section-hero-tagihan");
   if (!heroContainer) return;
 
-  const tagihanAktif = tagihan.find(
+  const unpaidBills = tagihan.filter(
     (t) =>
       t.status === "belum" || t.status === "revisi" || t.status === "ditolak",
   );
-  const tagihanMenunggu = tagihan.find((t) => t.status === "menunggu");
+  const waitingBills = tagihan.filter((t) => t.status === "menunggu");
 
-  if (tagihanAktif) {
-    const jatuhTempo = tagihanAktif.jatuhTempo
-      ? `Jatuh tempo: ${tagihanAktif.jatuhTempo}`
+  // Kasus 1: Ada tagihan belum lunas
+  if (unpaidBills.length > 0) {
+    const totalNominal = unpaidBills.reduce(
+      (sum, t) => sum + (Number(t.nominal) || 0),
+      0,
+    );
+
+    // Jika filter "Semua Anak" dan ada lebih dari 1 tagihan belum lunas
+    if (filterSiswaId === "all" && unpaidBills.length > 1) {
+      const breakdownHtml = unpaidBills
+        .slice(0, 3)
+        .map(
+          (t) => `
+        <div class="hero-breakdown-item">
+          <div>
+            <div class="hero-breakdown-item-name">${t.namaSiswa || "Siswa"}</div>
+            <div class="hero-breakdown-item-sub">SPP ${Helpers.periodeLabel(t.periode)} &bull; ${t.kelas || ""}</div>
+          </div>
+          <div style="display:flex;align-items:center">
+            <span class="hero-breakdown-item-amt">${Helpers.rupiah(t.nominal)}</span>
+            <button class="hero-mini-pay-btn" onclick="Router.go('pembayaran', '${t.id}')">
+              Bayar
+            </button>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
+
+      heroContainer.innerHTML = `
+        <div class="hero-bill-card">
+          <div class="hero-top-row">
+            <div class="hero-tag">${unpaidBills.length} Tagihan Belum Lunas</div>
+            <div class="hero-date-chip">${Helpers.hariTanggal()}</div>
+          </div>
+          <div class="hero-label">Total Tagihan Keluarga yang Perlu Dibayar:</div>
+          <div class="hero-amount">${Helpers.rupiah(totalNominal)}</div>
+
+          <div class="hero-breakdown-box">
+            ${breakdownHtml}
+            ${
+              unpaidBills.length > 3
+                ? `<div style="font-size:11px;opacity:0.85;text-align:center;padding-top:4px">+${unpaidBills.length - 3} tagihan lainnya</div>`
+                : ""
+            }
+          </div>
+
+          <button class="hero-action-btn" onclick="Router.go('tagihan')">
+            ${Icons.receipt} Lihat Semua Tagihan Anak
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    // Tagihan tunggal aktif
+    const utama = unpaidBills[0];
+    const jatuhTempo = utama.jatuhTempo
+      ? `Jatuh tempo: ${utama.jatuhTempo}`
       : "Harap bayar tepat waktu";
     const statusLabel =
-      tagihanAktif.status === "revisi" ? "Perlu Revisi Bukti" : "Belum Dibayar";
+      utama.status === "revisi" ? "Perlu Revisi Bukti" : "Belum Dibayar";
 
     heroContainer.innerHTML = `
       <div class="hero-bill-card">
         <div class="hero-top-row">
-          <div class="hero-tag">SPP ${Helpers.periodeLabel(tagihanAktif.periode)}</div>
+          <div class="hero-tag">SPP ${Helpers.periodeLabel(utama.periode)}</div>
           <div class="hero-date-chip">${jatuhTempo}</div>
         </div>
         <div class="hero-label">Tagihan yang Perlu Dibayar:</div>
-        <div class="hero-amount">${Helpers.rupiah(tagihanAktif.nominal)}</div>
+        <div class="hero-amount">${Helpers.rupiah(utama.nominal)}</div>
         <div class="hero-subtitle">
-          <span>${tagihanAktif.namaSiswa || "Siswa"}</span>
+          <span>${utama.namaSiswa || "Siswa"} (${utama.kelas || "-"})</span>
           <span>&bull;</span>
           <span>${statusLabel}</span>
         </div>
-        <button class="hero-action-btn" onclick="Router.go('pembayaran', '${tagihanAktif.id}')">
-          ${Icons.wallet} Bayar Sekarang
+        <button class="hero-action-btn" onclick="Router.go('pembayaran', '${utama.id}')">
+          ${Icons.wallet} Bayar Tagihan Sekarang
         </button>
       </div>
     `;
-  } else if (tagihanMenunggu) {
+    return;
+  }
+
+  // Kasus 2: Ada tagihan menunggu verifikasi
+  if (waitingBills.length > 0) {
+    const utama = waitingBills[0];
+    const totalMenunggu = waitingBills.reduce(
+      (sum, t) => sum + (Number(t.nominal) || 0),
+      0,
+    );
+
     heroContainer.innerHTML = `
       <div class="hero-bill-card menunggu-state">
         <div class="hero-top-row">
-          <div class="hero-tag">SPP ${Helpers.periodeLabel(tagihanMenunggu.periode)}</div>
+          <div class="hero-tag">${waitingBills.length} Tagihan Menunggu</div>
           <div class="hero-date-chip">Dalam Proses</div>
         </div>
         <div class="hero-label">Menunggu Verifikasi Admin</div>
-        <div class="hero-amount">${Helpers.rupiah(tagihanMenunggu.nominal)}</div>
-        <div class="hero-subtitle">Bukti transfer sudah dikirim &amp; sedang ditinjau petugas</div>
-        <button class="hero-action-btn" onclick="Router.go('detail-tagihan', '${tagihanMenunggu.id}')">
+        <div class="hero-amount">${Helpers.rupiah(totalMenunggu)}</div>
+        <div class="hero-subtitle">
+          <span>${utama.namaSiswa || "Siswa"}</span>
+          ${waitingBills.length > 1 ? `<span>(+${waitingBills.length - 1} lainnya)</span>` : ""}
+          <span>&bull;</span>
+          <span>Sedang ditinjau petugas</span>
+        </div>
+        <button class="hero-action-btn" onclick="Router.go('detail-tagihan', '${utama.id}')">
           ${Icons.receipt} Lihat Status Verifikasi
         </button>
       </div>
     `;
-  } else if (tagihan.length > 0) {
+    return;
+  }
+
+  // Kasus 3: Semua tagihan sudah lunas
+  if (tagihan.length > 0) {
+    const namaAnakLabel =
+      siswaList && siswaList.length > 0
+        ? siswaList.map((s) => s.nama.split(" ")[0]).join(" & ")
+        : "Anak Anda";
+
     heroContainer.innerHTML = `
       <div class="hero-bill-card lunas-state">
         <div class="hero-top-row">
@@ -353,25 +458,62 @@ function renderHeroTagihan(tagihan, siswaList) {
         </div>
         <div class="hero-label">Status Tagihan SPP</div>
         <div class="hero-amount">Lunas Terbayar</div>
-        <div class="hero-subtitle">Seluruh tagihan telah diselesaikan. Terima kasih.</div>
+        <div class="hero-subtitle">Seluruh kewajiban SPP untuk ${namaAnakLabel} telah diselesaikan. Terima kasih.</div>
         <button class="hero-action-btn" onclick="Router.go('riwayat')">
           ${Icons.history} Lihat Riwayat Transaksi
         </button>
       </div>
     `;
-  } else {
-    heroContainer.innerHTML = `
-      <div class="hero-bill-card">
-        <div class="hero-top-row">
-          <div class="hero-tag">Informasi SPP</div>
-          <div class="hero-date-chip">${Helpers.hariTanggal()}</div>
-        </div>
-        <div class="hero-label">Belum Ada Tagihan Aktif</div>
-        <div class="hero-amount">Rp 0</div>
-        <div class="hero-subtitle">Tagihan semester baru akan muncul otomatis di sini</div>
-        <button class="hero-action-btn" onclick="Router.go('panduan')">
-          ${Icons.guide} Panduan Pembayaran
-        </button>
+    return;
+  }
+
+  // Kasus 4: Belum ada tagihan sama sekali
+  heroContainer.innerHTML = `
+    <div class="hero-bill-card">
+      <div class="hero-top-row">
+        <div class="hero-tag">Informasi SPP</div>
+        <div class="hero-date-chip">${Helpers.hariTanggal()}</div>
+      </div>
+      <div class="hero-label">Belum Ada Tagihan Aktif</div>
+      <div class="hero-amount">Rp 0</div>
+      <div class="hero-subtitle">Tagihan periode baru akan muncul otomatis di sini</div>
+      <button class="hero-action-btn" onclick="Router.go('panduan')">
+        ${Icons.guide} Panduan Pembayaran
+      </button>
+    </div>
+  `;
+}
+
+function renderSummaryTiles(tagihan) {
+  const counts = { total: tagihan.length, belum: 0, menunggu: 0, lunas: 0 };
+  tagihan.forEach((t) => {
+    if (
+      t.status === "belum" ||
+      t.status === "revisi" ||
+      t.status === "ditolak"
+    ) {
+      counts.belum++;
+    } else if (t.status === "menunggu") {
+      counts.menunggu++;
+    } else if (t.status === "lunas") {
+      counts.lunas++;
+    }
+  });
+
+  const summaryEl = document.getElementById("summary-dashboard-ortu");
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="summary-tile" onclick="Router.go('tagihan')">
+        <div class="summary-tile-num">${counts.total}</div>
+        <div class="summary-tile-label">Total Tagihan</div>
+      </div>
+      <div class="summary-tile warning" onclick="Router.go('tagihan')">
+        <div class="summary-tile-num">${counts.belum}</div>
+        <div class="summary-tile-label">Belum Lunas</div>
+      </div>
+      <div class="summary-tile success" onclick="Router.go('tagihan')">
+        <div class="summary-tile-num">${counts.lunas}</div>
+        <div class="summary-tile-label">Sudah Lunas</div>
       </div>
     `;
   }
@@ -385,13 +527,13 @@ function renderTagihanTerkini(tagihan) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">${Icons.receipt}</div>
-        <div class="empty-state-text">Belum ada daftar tagihan untuk akun Anda.</div>
+        <div class="empty-state-text">Tidak ada tagihan yang sesuai.</div>
       </div>
     `;
     return;
   }
 
-  const terbaru = tagihan.slice(0, 3);
+  const terbaru = tagihan.slice(0, 4);
   container.innerHTML = terbaru
     .map((t) => {
       const isLunas = t.status === "lunas";
@@ -407,7 +549,8 @@ function renderTagihanTerkini(tagihan) {
             <div class="bill-card-info">
               <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
               <div class="bill-card-meta">
-                <span>${t.namaSiswa || "Siswa"}</span>
+                <span class="font-semibold" style="color:var(--text)">${t.namaSiswa || "Siswa"}</span>
+                ${t.kelas ? `<span>&bull;</span><span>${t.kelas}</span>` : ""}
                 ${jatuhTempo ? `<span>&bull;</span><span>${jatuhTempo}</span>` : ""}
               </div>
             </div>
@@ -427,12 +570,20 @@ function aksiBayarSPP() {
     Router.go("tagihan");
     return;
   }
-  const belum = _currentTagihanList.find(
+
+  // Jika sedang memfilter 1 anak tertentu
+  const targetList =
+    _selectedSiswaFilter === "all"
+      ? _currentTagihanList
+      : _currentTagihanList.filter((t) => t.siswaId === _selectedSiswaFilter);
+
+  const unpaid = targetList.filter(
     (t) =>
       t.status === "belum" || t.status === "revisi" || t.status === "ditolak",
   );
-  if (belum) {
-    Router.go("pembayaran", belum.id);
+
+  if (unpaid.length === 1) {
+    Router.go("pembayaran", unpaid[0].id);
   } else {
     Router.go("tagihan");
   }
@@ -529,7 +680,7 @@ function renderModalAnakTerhubung() {
   if (!container) return;
 
   if (!_currentSiswaList || _currentSiswaList.length === 0) {
-    container.innerHTML = ""; // kosongkan saja, tidak perlu pesan warning di sini
+    container.innerHTML = "";
     return;
   }
 
@@ -567,19 +718,15 @@ async function cariSiswaOrtu() {
   hasilEl.innerHTML = `<div class="loading">Mencari data siswa...</div>`;
 
   try {
-    const nisSap = await db
-      .collection("siswa")
-      .where("nis", "==", keyword)
-      .get();
-    const namaSnap = await db
-      .collection("siswa")
-      .where("nama", ">=", keyword)
-      .where("nama", "<=", keyword + "\uf8ff")
-      .get();
+    const snapAll = await db.collection("siswa").get();
+    const kwLower = keyword.toLowerCase();
 
-    const semuaDoc = [...nisSap.docs];
-    namaSnap.docs.forEach((d) => {
-      if (!semuaDoc.find((x) => x.id === d.id)) semuaDoc.push(d);
+    const semuaDoc = snapAll.docs.filter((d) => {
+      const s = d.data();
+      const namaMatch = (s.nama || "").toLowerCase().includes(kwLower);
+      const nisMatch = (s.nis || "").toLowerCase().includes(kwLower);
+      const kelasMatch = (s.kelas || "").toLowerCase() === kwLower;
+      return namaMatch || nisMatch || kelasMatch;
     });
 
     if (semuaDoc.length === 0) {

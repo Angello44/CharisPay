@@ -20,29 +20,43 @@ Router.register("wali-kelas", {
             <div id="wali-list"><div class="loading">Memuat data wali kelas...</div></div>
 
             <!-- Modal Form Wali Kelas -->
-            <div id="modal-wali" class="modal-overlay hidden">
-                <div class="modal" style="max-height:90vh;overflow-y:auto">
-                    <div class="modal-title" id="modal-wali-title">Tambah Wali Kelas</div>
+            <div id="modal-wali" class="modal-overlay hidden" onclick="if(event.target===this) tutupFormWali()">
+                <div class="modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <div>
+                            <div class="modal-title" id="modal-wali-title">Tambah Wali Kelas</div>
+                            <div class="modal-subtitle" id="modal-wali-sub">Atur guru wali untuk kelas terpilih</div>
+                        </div>
+                        <button type="button" class="modal-close-btn" onclick="tutupFormWali()" aria-label="Tutup">
+                            ${Icons.cross}
+                        </button>
+                    </div>
+
                     <div id="wali-form-error" class="form-error" style="margin-bottom:10px"></div>
 
-                    <div class="form-group">
-                        <label>Kelas</label>
-                        <select id="wali-kelas-select"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Nama Wali Kelas</label>
-                        <input type="text" id="wali-nama" placeholder="cth: Ibu Ani Susanti, S.Pd">
-                    </div>
-                    <div class="form-group">
-                        <label>No. HP (opsional)</label>
-                        <input type="tel" id="wali-hp" placeholder="cth: 081234567890 (WhatsApp aktif)">
+                    <div class="modal-body-scroll">
+                        <div class="form-group">
+                            <label>Kelas</label>
+                            <div class="custom-select-box" id="box-wali-kelas-select" onclick="ClassPicker.open('wali-kelas-select')">
+                                <span id="text-wali-kelas-select" class="placeholder">-- Pilih Kelas --</span>
+                                <span class="select-chevron">${Icons.chevronDown}</span>
+                            </div>
+                            <input type="hidden" id="wali-kelas-select" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Wali Kelas</label>
+                            <input type="text" id="wali-nama" placeholder="cth: Ibu Ani Susanti, S.Pd">
+                        </div>
+                        <div class="form-group">
+                            <label>No. HP / WhatsApp (opsional)</label>
+                            <input type="tel" id="wali-hp" placeholder="cth: 081234567890">
+                        </div>
+                        <input type="hidden" id="wali-edit-id">
                     </div>
 
-                    <input type="hidden" id="wali-edit-id">
-
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" onclick="tutupFormWali()">Batal</button>
-                        <button class="btn btn-primary" id="btn-simpan-wali" onclick="simpanWali()">Simpan</button>
+                    <div class="modal-actions" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+                        <button type="button" class="btn btn-secondary" onclick="tutupFormWali()">Batal</button>
+                        <button type="button" class="btn btn-primary" id="btn-simpan-wali" onclick="simpanWali()">Simpan</button>
                     </div>
                 </div>
             </div>
@@ -126,9 +140,7 @@ function renderWaliKelas(list) {
 
 function showFormWali(data = null) {
   // Isi dropdown kelas
-  document.getElementById("wali-kelas-select").innerHTML = getKelasOptions(
-    data ? data.kelas : "",
-  );
+  ClassPicker.setValue("wali-kelas-select", data ? data.kelas : "");
   document.getElementById("wali-nama").value = data ? data.namaWali || "" : "";
   document.getElementById("wali-hp").value = data ? data.noHp || "" : "";
   document.getElementById("wali-edit-id").value = data ? data.id : "";
@@ -136,6 +148,12 @@ function showFormWali(data = null) {
   document.getElementById("modal-wali-title").textContent = data
     ? "Edit Wali Kelas"
     : "Tambah Wali Kelas";
+  const subEl = document.getElementById("modal-wali-sub");
+  if (subEl) {
+    subEl.textContent = data
+      ? "Perbarui guru wali untuk kelas terpilih"
+      : "Atur guru wali untuk kelas terpilih";
+  }
   document.getElementById("modal-wali").classList.remove("hidden");
 }
 

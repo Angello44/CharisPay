@@ -20,10 +20,10 @@ Router.register("dashboard-admin", {
       </div>
 
       <div class="summary-grid" id="summary-admin">
-        <div class="summary-card primary"><div class="summary-number">-</div><div class="summary-label">Total Siswa</div></div>
-        <div class="summary-card warning"><div class="summary-number">-</div><div class="summary-label">Belum Bayar</div></div>
-        <div class="summary-card info"><div class="summary-number">-</div><div class="summary-label">Perlu Verifikasi</div></div>
-        <div class="summary-card success"><div class="summary-number">-</div><div class="summary-label">Lunas</div></div>
+        <div class="summary-card primary" onclick="Router.go('data-siswa')" style="cursor:pointer"><div class="summary-number">-</div><div class="summary-label">Total Siswa</div></div>
+        <div class="summary-card warning" onclick="Router.go('tagihan-admin')" style="cursor:pointer"><div class="summary-number">-</div><div class="summary-label">Belum Bayar</div></div>
+        <div class="summary-card info" onclick="Router.go('verifikasi')" style="cursor:pointer"><div class="summary-number">-</div><div class="summary-label">Perlu Verifikasi</div></div>
+        <div class="summary-card success" onclick="Router.go('laporan')" style="cursor:pointer"><div class="summary-number">-</div><div class="summary-label">Lunas</div></div>
       </div>
 
       <div class="section-title">Menu Utama Admin</div>
@@ -123,10 +123,10 @@ async function loadDashboardAdmin() {
     const summaryEl = document.getElementById("summary-admin");
     if (summaryEl) {
       summaryEl.innerHTML = `
-        <div class="summary-card primary"><div class="summary-number">${totalSiswa}</div><div class="summary-label">Total Siswa</div></div>
-        <div class="summary-card warning"><div class="summary-number">${belumBayar}</div><div class="summary-label">Belum Bayar</div></div>
-        <div class="summary-card info"><div class="summary-number">${menunggu}</div><div class="summary-label">Perlu Verifikasi</div></div>
-        <div class="summary-card success"><div class="summary-number">${lunas}</div><div class="summary-label">Lunas</div></div>
+        <div class="summary-card primary" onclick="Router.go('data-siswa')" style="cursor:pointer"><div class="summary-number">${totalSiswa}</div><div class="summary-label">Total Siswa</div></div>
+        <div class="summary-card warning" onclick="Router.go('tagihan-admin')" style="cursor:pointer"><div class="summary-number">${belumBayar}</div><div class="summary-label">Belum Bayar</div></div>
+        <div class="summary-card info" onclick="Router.go('verifikasi')" style="cursor:pointer"><div class="summary-number">${menunggu}</div><div class="summary-label">Perlu Verifikasi</div></div>
+        <div class="summary-card success" onclick="Router.go('laporan')" style="cursor:pointer"><div class="summary-number">${lunas}</div><div class="summary-label">Lunas</div></div>
       `;
     }
 

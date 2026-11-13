@@ -1,5 +1,5 @@
 /* ============================================================
-   Halaman Riwayat Pembayaran (Orang Tua - Clean Vector UI)
+   Halaman Riwayat Pembayaran (Orang Tua - Multi Anak Support)
    ============================================================ */
 
 Router.register("riwayat", {
@@ -10,6 +10,10 @@ Router.register("riwayat", {
 
   render() {
     return `
+      <!-- Filter Tab Anak (Multi-Anak Switcher) -->
+      <div id="riwayat-anak-filter-container"></div>
+
+      <!-- Container Daftar Transaksi -->
       <div id="riwayat-list"><div class="loading">Memuat riwayat pembayaran...</div></div>
     `;
   },
@@ -19,63 +23,150 @@ Router.register("riwayat", {
   },
 });
 
+let _riwayatCached = [];
+let _riwayatSiswaList = [];
+let _activeRiwayatAnakFilter = "semua";
+
 async function loadRiwayat() {
   Helpers.loading("riwayat-list");
   try {
     const uid = Auth.getUid();
+    const siswaList = await getSiswaOrtu();
+    _riwayatSiswaList = siswaList;
+    const allSiswaIds = siswaList.map((s) => s.id);
 
-    const snap = await db.collection("transaksi").where("uid", "==", uid).get();
+    // Ambil transaksi berdasarkan UID orang tua
+    const snapUid = await db
+      .collection("transaksi")
+      .where("uid", "==", uid)
+      .get();
 
-    if (snap.empty) {
-      Helpers.emptyState("riwayat-list", Icons.receipt, "Belum ada riwayat transaksi yang tercatat.");
-      return;
+    const transaksiMap = new Map();
+    snapUid.docs.forEach((d) => transaksiMap.set(d.id, { id: d.id, ...d.data() }));
+
+    // Ambil juga transaksi berdasarkan siswaId milik ortu (agar mencakup pembayaran tunai)
+    if (allSiswaIds.length > 0) {
+      for (let i = 0; i < allSiswaIds.length; i += 10) {
+        const batch = allSiswaIds.slice(i, i + 10);
+        const snapSiswa = await db
+          .collection("transaksi")
+          .where("siswaId", "in", batch)
+          .get();
+
+        snapSiswa.docs.forEach((d) =>
+          transaksiMap.set(d.id, { id: d.id, ...d.data() }),
+        );
+      }
     }
 
-    const transaksi = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    transaksi.sort((a, b) => {
+    _riwayatCached = Array.from(transaksiMap.values());
+    _riwayatCached.sort((a, b) => {
       const ta = a.createdAt ? a.createdAt.toMillis() : 0;
       const tb = b.createdAt ? b.createdAt.toMillis() : 0;
       return tb - ta;
     });
 
-    const container = document.getElementById("riwayat-list");
-
-    container.innerHTML = `
-      <div class="section-title mb-12">Semua Transaksi (${transaksi.length})</div>
-      ${transaksi
-        .map((t) => {
-          const metodeLabel = t.metode === "tunai" ? "Tunai di Sekolah" : "Transfer Bank BCA";
-          const tanggal = Helpers.tanggal(t.createdAt);
-          const isLunas = t.status === "lunas";
-
-          return `
-            <div class="bill-card" onclick="showDetailRiwayat('${t.id}')">
-              <div class="bill-card-left">
-                <div class="bill-icon-box" style="${isLunas ? 'background:#dcfce7;color:#16a34a' : ''}">
-                  ${isLunas ? Icons.checkCircle : Icons.receipt}
-                </div>
-                <div class="bill-card-info">
-                  <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
-                  <div class="bill-card-meta">
-                    <span>${metodeLabel}</span>
-                    <span>&bull;</span>
-                    <span>${tanggal}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="bill-card-right">
-                <div class="bill-card-amount">${Helpers.rupiah(t.nominal)}</div>
-                ${Helpers.badge(t.status)}
-              </div>
-            </div>
-          `;
-        })
-        .join("")}
-    `;
+    renderRiwayatAnakFilterTabs();
+    renderRiwayatList();
   } catch (err) {
     console.error("Gagal load riwayat:", err);
     Helpers.errorState("riwayat-list", "Gagal memuat: " + err.message);
   }
+}
+
+function renderRiwayatAnakFilterTabs() {
+  const container = document.getElementById("riwayat-anak-filter-container");
+  if (!container) return;
+
+  if (!_riwayatSiswaList || _riwayatSiswaList.length <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="filter-tabs" style="margin-bottom:12px">
+      <div class="filter-chip ${_activeRiwayatAnakFilter === "semua" ? "active" : ""}"
+           onclick="pilihFilterRiwayatAnak('semua', this)">
+        Semua Anak (${_riwayatSiswaList.length})
+      </div>
+      ${_riwayatSiswaList
+        .map(
+          (s) => `
+        <div class="filter-chip ${_activeRiwayatAnakFilter === s.id ? "active" : ""}"
+             onclick="pilihFilterRiwayatAnak('${s.id}', this)">
+          ${s.nama} (${s.kelas || "-"})
+        </div>
+      `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function pilihFilterRiwayatAnak(siswaId, el) {
+  _activeRiwayatAnakFilter = siswaId;
+  if (el) {
+    const parent = el.parentElement;
+    parent.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
+    el.classList.add("active");
+  }
+  renderRiwayatList();
+}
+
+function renderRiwayatList() {
+  const container = document.getElementById("riwayat-list");
+  if (!container) return;
+
+  let filtered = _riwayatCached;
+  if (_activeRiwayatAnakFilter !== "semua") {
+    filtered = _riwayatCached.filter((t) => t.siswaId === _activeRiwayatAnakFilter);
+  }
+
+  if (filtered.length === 0) {
+    Helpers.emptyState(
+      "riwayat-list",
+      Icons.receipt,
+      "Belum ada riwayat transaksi yang tercatat untuk filter ini.",
+    );
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="section-title mb-12">Semua Transaksi (${filtered.length})</div>
+    ${filtered
+      .map((t) => {
+        const metodeLabel =
+          t.metode === "tunai" ? "Tunai di Sekolah" : "Transfer Bank BCA";
+        const tanggal = Helpers.tanggal(t.createdAt);
+        const isLunas = t.status === "lunas";
+
+        return `
+          <div class="bill-card" onclick="showDetailRiwayat('${t.id}')">
+            <div class="bill-card-left">
+              <div class="bill-icon-box" style="${isLunas ? "background:#dcfce7;color:#16a34a" : ""}">
+                ${isLunas ? Icons.checkCircle : Icons.receipt}
+              </div>
+              <div class="bill-card-info">
+                <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
+                <div class="bill-card-meta">
+                  <span class="font-semibold" style="color:var(--text)">${t.namaSiswa || "Siswa"}</span>
+                  ${t.kelas ? `<span>&bull;</span><span>${t.kelas}</span>` : ""}
+                  <span>&bull;</span>
+                  <span>${metodeLabel}</span>
+                  <span>&bull;</span>
+                  <span>${tanggal}</span>
+                </div>
+              </div>
+            </div>
+            <div class="bill-card-right">
+              <div class="bill-card-amount">${Helpers.rupiah(t.nominal)}</div>
+              ${Helpers.badge(t.status)}
+            </div>
+          </div>
+        `;
+      })
+      .join("")}
+  `;
 }
 
 async function showDetailRiwayat(id) {
