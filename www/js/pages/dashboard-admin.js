@@ -388,7 +388,7 @@ function renderVerifQueue(docs) {
 
   list.forEach((doc) => {
     const t = { id: doc.id, ...doc.data() };
-    const tanggal = t.createdAt ? Helpers.tanggal(t.createdAt) : "-";
+    const tanggal = t.createdAt ? Helpers.formatTanggal(t.createdAt.toDate()) : "-";
 
     rowsHtml += `
       <tr class="queue-table-row" onclick="Router.go('verifikasi')" style="cursor:pointer">

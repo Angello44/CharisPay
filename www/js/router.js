@@ -254,31 +254,26 @@ const Router = {
       `;
     }
 
-    const adminName = (Auth.profile && Auth.profile.nama) || "Petugas Keuangan";
+    const adminName = (Auth.profile && Auth.profile.nama) || "Charis Institute";
 
     sidebar.innerHTML = `
-      <div class="sidebar-logo">
-        <img src="img/logo.png" alt="CharisPay" style="width:40px;height:40px;object-fit:contain;border-radius:8px">
-        <div class="sidebar-logo-text-group">
-          <span class="sidebar-logo-title">CharisPay</span>
-          <span class="sidebar-logo-subtitle">Portal Admin SPP</span>
+      <!-- Brand & Profile Header Sesuai Referensi Gambar (Avatar Lingkaran Besar + Aksen Cincin) -->
+      <div class="sidebar-brand-header">
+        <div class="sidebar-brand-avatar-wrap">
+          <div class="sidebar-brand-avatar">
+            <span>${adminName.charAt(0).toUpperCase()}</span>
+          </div>
         </div>
+        <div class="sidebar-brand-name">${adminName}</div>
+        <div class="sidebar-brand-role">Petugas Keuangan SPP</div>
       </div>
 
-      <div class="sidebar-user-card">
-        <div class="sidebar-user-avatar">${adminName.charAt(0).toUpperCase()}</div>
-        <div class="sidebar-user-meta">
-          <div class="sidebar-user-name">${adminName}</div>
-          <div class="sidebar-user-role">Bagian Keuangan</div>
-        </div>
-      </div>
-
-      <div class="sidebar-nav-label">Navigasi Utama</div>
+      <div class="sidebar-nav-label">Menu Admin</div>
       <nav class="sidebar-menu">${menuHtml}</nav>
 
       <div class="sidebar-footer">
         <button class="sidebar-logout" onclick="Auth.logout()">
-          <span>${Icons.logout}</span>
+          <span>${typeof Icons !== "undefined" ? Icons.logout : ""}</span>
           <span>Keluar Akun</span>
         </button>
       </div>
@@ -327,96 +322,102 @@ const Router = {
 
 const NAV_ITEMS = {
   // Mobile Bottom Nav untuk Orang Tua (Selalu HP)
-  ortu: [
-    {
-      route: "dashboard-ortu",
-      label: "Beranda",
-      icon: Icons.wallet,
-    },
-    {
-      route: "tagihan",
-      label: "Tagihan",
-      icon: Icons.receipt,
-    },
-    {
-      route: "riwayat",
-      label: "Riwayat",
-      icon: Icons.history,
-    },
-    {
-      route: "panduan",
-      label: "Bantuan",
-      icon: Icons.guide,
-    },
-  ],
+  get ortu() {
+    return [
+      {
+        route: "dashboard-ortu",
+        label: "Beranda",
+        icon: typeof Icons !== "undefined" ? Icons.wallet : "",
+      },
+      {
+        route: "tagihan",
+        label: "Tagihan",
+        icon: typeof Icons !== "undefined" ? Icons.receipt : "",
+      },
+      {
+        route: "riwayat",
+        label: "Riwayat",
+        icon: typeof Icons !== "undefined" ? Icons.history : "",
+      },
+      {
+        route: "panduan",
+        label: "Bantuan",
+        icon: typeof Icons !== "undefined" ? Icons.guide : "",
+      },
+    ];
+  },
 
   // Mobile Bottom Nav untuk Admin (saat dibuka di layar HP < 768px)
-  admin_mobile: [
-    {
-      route: "dashboard-admin",
-      label: "Beranda",
-      icon: Icons.receipt,
-    },
-    {
-      route: "data-siswa",
-      label: "Siswa",
-      icon: Icons.students,
-    },
-    {
-      route: "verifikasi",
-      label: "Verifikasi",
-      icon: Icons.verified,
-    },
-    {
-      route: "laporan",
-      label: "Laporan",
-      icon: Icons.report,
-    },
-  ],
+  get admin_mobile() {
+    return [
+      {
+        route: "dashboard-admin",
+        label: "Beranda",
+        icon: typeof Icons !== "undefined" ? Icons.receipt : "",
+      },
+      {
+        route: "data-siswa",
+        label: "Siswa",
+        icon: typeof Icons !== "undefined" ? Icons.students : "",
+      },
+      {
+        route: "verifikasi",
+        label: "Verifikasi",
+        icon: typeof Icons !== "undefined" ? Icons.verified : "",
+      },
+      {
+        route: "laporan",
+        label: "Laporan",
+        icon: typeof Icons !== "undefined" ? Icons.report : "",
+      },
+    ];
+  },
 
   // Sidebar Desktop Lengkap untuk Admin (saat dibuka di monitor >= 768px)
-  admin_sidebar: [
-    {
-      route: "dashboard-admin",
-      label: "Dashboard",
-      icon: Icons.receipt,
-      badge: null,
-    },
-    {
-      route: "data-siswa",
-      label: "Data Siswa",
-      icon: Icons.students,
-      badge: null,
-    },
-    {
-      route: "tagihan-admin",
-      label: "Kelola Tagihan",
-      icon: Icons.wallet,
-      badge: null,
-    },
-    {
-      route: "verifikasi",
-      label: "Verifikasi Bayar",
-      icon: Icons.verified,
-      badge: "badge-verif-sidebar",
-    },
-    {
-      route: "laporan",
-      label: "Laporan Keuangan",
-      icon: Icons.report,
-      badge: null,
-    },
-    {
-      route: "wali-kelas",
-      label: "Data Wali Kelas",
-      icon: Icons.teacher,
-      badge: null,
-    },
-    {
-      route: "nilai-admin",
-      label: "Input Nilai Siswa",
-      icon: Icons.grade,
-      badge: null,
-    },
-  ],
+  get admin_sidebar() {
+    return [
+      {
+        route: "dashboard-admin",
+        label: "Dashboard",
+        icon: typeof Icons !== "undefined" ? Icons.receipt : "",
+        badge: null,
+      },
+      {
+        route: "data-siswa",
+        label: "Data Siswa",
+        icon: typeof Icons !== "undefined" ? Icons.students : "",
+        badge: null,
+      },
+      {
+        route: "tagihan-admin",
+        label: "Kelola Tagihan",
+        icon: typeof Icons !== "undefined" ? Icons.wallet : "",
+        badge: null,
+      },
+      {
+        route: "verifikasi",
+        label: "Verifikasi Bayar",
+        icon: typeof Icons !== "undefined" ? Icons.verified : "",
+        badge: "badge-verif-sidebar",
+      },
+      {
+        route: "laporan",
+        label: "Laporan Keuangan",
+        icon: typeof Icons !== "undefined" ? Icons.report : "",
+        badge: null,
+      },
+      {
+        route: "wali-kelas",
+        label: "Data Wali Kelas",
+        icon: typeof Icons !== "undefined" ? Icons.teacher : "",
+        badge: null,
+      },
+      {
+        route: "nilai-admin",
+        label: "Input Nilai Siswa",
+        icon: typeof Icons !== "undefined" ? Icons.grade : "",
+        badge: null,
+      },
+    ];
+  },
 };
