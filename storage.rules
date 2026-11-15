@@ -1,0 +1,41 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============================================================
+    // Bukti Transfer — bukti-transfer/{uid}/{filename}
+    // ============================================================
+    match /bukti-transfer/{uid}/{filename} {
+
+      // Baca: hanya pemilik file (uid sama) atau admin
+      // Admin diidentifikasi lewat custom claim — kalau belum ada
+      // custom claim, pakai cek sederhana: hanya pemilik yang bisa baca
+      allow read: if request.auth != null && (
+        request.auth.uid == uid
+      );
+
+      // Upload: hanya user yang login dan UID-nya sesuai folder
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        // Batasi ukuran file: max 5MB
+        && request.resource.size <= 5 * 1024 * 1024
+        // Batasi tipe file: hanya gambar dan PDF
+        && (
+          request.resource.contentType.matches('image/jpeg') ||
+          request.resource.contentType.matches('image/png') ||
+          request.resource.contentType.matches('application/pdf')
+        );
+
+      // Hapus: hanya pemilik file
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ============================================================
+    // Semua path lain — diblokir
+    // ============================================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+  }
+}
