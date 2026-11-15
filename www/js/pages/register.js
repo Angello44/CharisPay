@@ -11,7 +11,7 @@ Router.register("register", {
             <div class="auth-page">
                 <div class="auth-logo">
                     <img src="img/logo.png" alt="CharisPay"
-                         style="width:90px;height:90px;object-fit:contain;border-radius:18px;margin-bottom:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1)">
+                         style="width:110px;height:110px;object-fit:contain;margin-bottom:4px">
                     <h1>Daftar Akun Baru</h1>
                     <p>Portal Orang Tua / Wali Murid</p>
                 </div>

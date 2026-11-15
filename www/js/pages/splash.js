@@ -15,7 +15,7 @@ Router.register("splash", {
             <div class="splash">
                 <img src="img/logo.png"
                      alt="CharisPay"
-                     style="width:140px;height:140px;object-fit:contain;border-radius:24px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15)">
+                     style="width:200px;height:200px;object-fit:contain;margin-bottom:8px">
                 <div class="splash-subtitle">Sistem Pembayaran SPP</div>
                 <div class="splash-spinner"></div>
             </div>
