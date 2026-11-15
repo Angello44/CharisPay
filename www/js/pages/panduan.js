@@ -149,6 +149,48 @@ Router.register("panduan", {
           </div>
         </div>
 
+        <!-- 6. Cara Menghubungkan Data Anak (Siswa) -->
+        <div class="faq-accordion-item" id="faq-6">
+          <div class="faq-accordion-header" onclick="toggleFaq('faq-6')">
+            <div class="faq-header-left">
+              <div class="faq-number-badge">6</div>
+              <div class="faq-icon-box qa-cyan">${Icons.students}</div>
+              <div class="faq-title">Cara Menghubungkan Data Anak</div>
+            </div>
+            <span class="faq-chevron">${Icons.chevronDown}</span>
+          </div>
+          <div class="faq-accordion-body">
+            <div class="faq-body-inner">
+              <p class="text-sm text-secondary mb-12">
+                Agar rincian tagihan SPP dan laporan nilai anak Anda muncul di aplikasi, terdapat 2 cara praktis untuk menghubungkan data:
+              </p>
+
+              <div style="font-weight:700;margin-bottom:8px;color:var(--text)">Opsi 1: Menghubungkan Mandiri dengan Nama atau NIS</div>
+              ${langkah([
+                { no: 1, teks: 'Buka halaman <strong>"Beranda"</strong>, lalu ketuk tombol <strong>"Hubungkan Anak"</strong> atau ikon <strong>"+"</strong> pada kartu informasi siswa.' },
+                { no: 2, teks: "Masukkan <strong>Nama Lengkap Siswa</strong> atau <strong>NIS (Nomor Induk Siswa)</strong> sesuai data resmi yang terdaftar di sekolah." },
+                { no: 3, teks: 'Ketuk tombol <strong>"Cari"</strong> untuk memeriksa kecocokan data siswa di sistem sekolah.' },
+                { no: 4, teks: 'Setelah data anak ditemukan (nama, kelas, dan NIS cocok), ketuk tombol <strong>"Hubungkan Siswa Ini"</strong>.' },
+                { no: 5, teks: "Profil anak dan seluruh tagihan SPP akan otomatis terhubung ke akun Anda." },
+              ])}
+
+              <div style="font-weight:700;margin:16px 0 8px;color:var(--text)">Opsi 2: Dihubungkan Langsung oleh Admin Sekolah</div>
+              ${langkah([
+                { no: 1, teks: "Pastikan Anda telah mendaftar akun di aplikasi CharisPay menggunakan email aktif." },
+                { no: 2, teks: "Sampaikan email akun tersebut kepada petugas administrasi/keuangan sekolah." },
+                { no: 3, teks: "Petugas Admin akan memasukkan email Anda pada kolom data orang tua siswa." },
+                { no: 4, teks: "Saat Anda login kembali, profil anak otomatis langsung terhubung tanpa perlu pencarian." },
+              ])}
+
+              <button class="btn btn-primary btn-sm mt-12 w-full" onclick="Router.go('dashboard-ortu'); setTimeout(() => { if (typeof showModalTambahAnak === 'function') showModalTambahAnak(); }, 300);">
+                ${Icons.students} Buka Menu Hubungkan Anak Sekarang
+              </button>
+
+              ${tipBox("Mendukung Lebih dari 1 Anak", "Bagi orang tua yang memiliki lebih dari satu anak bersekolah di Charis Institute, Anda dapat menghubungkan seluruh data anak dalam 1 akun yang sama dengan mengulangi pencarian di atas.")}
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Kontak Petugas Sekolah -->

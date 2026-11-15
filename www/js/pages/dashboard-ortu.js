@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Dashboard Orang Tua (Clean Vector Icons UI - Multi-Anak Support)
    ============================================================ */
 
@@ -114,6 +114,15 @@ Router.register("dashboard-ortu", {
           <button class="quick-action-item" onclick="hubungiAdminWA()">
             <div class="quick-action-icon qa-emerald">${Icons.chat}</div>
             <span class="quick-action-label">Bantuan WA</span>
+          </button>
+
+          <button class="quick-action-item" onclick="Router.go('profil')">
+            <div class="quick-action-icon qa-indigo">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+              </svg>
+            </div>
+            <span class="quick-action-label">Edit Profil</span>
           </button>
         </div>
       </div>
@@ -626,9 +635,10 @@ async function bukaModalWaliKelas() {
 
   let html = "";
   for (const s of _currentSiswaList) {
-    const walis = (typeof getSemuaWaliByKelas === "function")
-      ? await getSemuaWaliByKelas(s.kelas)
-      : [await getWaliByKelas(s.kelas)].filter(Boolean);
+    const walis =
+      typeof getSemuaWaliByKelas === "function"
+        ? await getSemuaWaliByKelas(s.kelas)
+        : [await getWaliByKelas(s.kelas)].filter(Boolean);
 
     let waliRows = "";
     if (walis.length === 0) {
@@ -644,9 +654,10 @@ async function bukaModalWaliKelas() {
       `;
     } else {
       walis.forEach((wali, idx) => {
-        const labelWali = walis.length > 1 ? `Wali Kelas ${idx + 1}` : "Wali Kelas";
+        const labelWali =
+          walis.length > 1 ? `Wali Kelas ${idx + 1}` : "Wali Kelas";
         waliRows += `
-          <div style="${idx > 0 ? 'margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);' : ''}">
+          <div style="${idx > 0 ? "margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);" : ""}">
             <div class="card-row">
               <span class="card-label">${labelWali}</span>
               <span class="card-value font-bold">${wali.namaWali || "-"}</span>

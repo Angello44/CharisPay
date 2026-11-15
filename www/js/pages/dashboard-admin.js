@@ -9,8 +9,8 @@ Router.register("dashboard-admin", {
   nav: true,
   requireAuth: true,
   role: "admin",
-  action: "Auth.logout()",
-  actionIcon: Icons.logout,
+  action: "Router.go('profil')",
+  actionIcon: `<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>`,
 
   render() {
     const nama = (Auth.profile && Auth.profile.nama) || "Petugas Keuangan";
@@ -165,6 +165,19 @@ Router.register("dashboard-admin", {
                   </div>
                   <span class="quick-link-arrow">${Icons.chevronRight}</span>
                 </div>
+
+                <div class="quick-link-item" onclick="Router.go('profil')">
+                  <div class="quick-link-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                    </svg>
+                  </div>
+                  <div class="quick-link-info">
+                    <div class="quick-link-title">Edit Profil</div>
+                    <div class="quick-link-desc">Nama, HP, email, password</div>
+                  </div>
+                  <span class="quick-link-arrow">${Icons.chevronRight}</span>
+                </div>
               </div>
             </div>
 
@@ -208,8 +221,18 @@ function renderMiniCalendar() {
   const today = now.getDate();
 
   const monthNames = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
 
   const firstDay = new Date(year, month, 1).getDay();
@@ -262,7 +285,12 @@ async function loadDashboardAdmin() {
 
     tagihanSnap.docs.forEach((d) => {
       const s = d.data();
-      if (s.status === "belum" || s.status === "revisi" || s.status === "ditolak") belumBayar++;
+      if (
+        s.status === "belum" ||
+        s.status === "revisi" ||
+        s.status === "ditolak"
+      )
+        belumBayar++;
       if (s.status === "lunas") {
         lunas++;
         totalNominalLunas += s.nominal || 0;
@@ -302,7 +330,6 @@ async function loadDashboardAdmin() {
 
     // 3. Render Antrean Verifikasi Pembayaran
     renderVerifQueue(transaksiSnap.docs);
-
   } catch (err) {
     console.error("Dashboard admin error:", err);
   }
@@ -325,7 +352,12 @@ function renderBarChart(tagihanDocs) {
     const kelas = (t.kelas || "").toUpperCase();
     let kategori = "SD";
     if (kelas.includes("TK") || kelas.includes("KB")) kategori = "TK";
-    else if (kelas.includes("SMP") || kelas.includes("7") || kelas.includes("8") || kelas.includes("9"))
+    else if (
+      kelas.includes("SMP") ||
+      kelas.includes("7") ||
+      kelas.includes("8") ||
+      kelas.includes("9")
+    )
       kategori = "SMP";
 
     stats[kategori].total++;
@@ -334,17 +366,24 @@ function renderBarChart(tagihanDocs) {
   });
 
   const jenjangConfigs = [
-    { key: "TK", title: "Jenjang TK / KB", color: "#38bdf8", bgTrack: "#e0f2fe" },
+    {
+      key: "TK",
+      title: "Jenjang TK / KB",
+      color: "#38bdf8",
+      bgTrack: "#e0f2fe",
+    },
     { key: "SD", title: "Jenjang SD", color: "#6366f1", bgTrack: "#eef2ff" },
     { key: "SMP", title: "Jenjang SMP", color: "#f97316", bgTrack: "#ffedd5" },
   ];
 
-  const barsHtml = jenjangConfigs.map((cfg) => {
-    const data = stats[cfg.key] || { total: 0, lunas: 0, nominal: 0 };
-    const pct = data.total > 0 ? Math.round((data.lunas / data.total) * 100) : 0;
-    const barHeight = Math.max(16, pct);
+  const barsHtml = jenjangConfigs
+    .map((cfg) => {
+      const data = stats[cfg.key] || { total: 0, lunas: 0, nominal: 0 };
+      const pct =
+        data.total > 0 ? Math.round((data.lunas / data.total) * 100) : 0;
+      const barHeight = Math.max(16, pct);
 
-    return `
+      return `
       <div class="chart-jenjang-item">
         <div class="chart-pct-badge" style="color:${cfg.color};background:${cfg.bgTrack}">${pct}%</div>
         <div class="chart-vertical-track" style="background:${cfg.bgTrack}">
@@ -355,7 +394,8 @@ function renderBarChart(tagihanDocs) {
         <div class="chart-jenjang-nominal">${Helpers.rupiah(data.nominal)}</div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   container.innerHTML = `
     <div class="chart-display-container">
@@ -388,7 +428,9 @@ function renderVerifQueue(docs) {
 
   list.forEach((doc) => {
     const t = { id: doc.id, ...doc.data() };
-    const tanggal = t.createdAt ? Helpers.formatTanggal(t.createdAt.toDate()) : "-";
+    const tanggal = t.createdAt
+      ? Helpers.formatTanggal(t.createdAt.toDate())
+      : "-";
 
     rowsHtml += `
       <tr class="queue-table-row" onclick="Router.go('verifikasi')" style="cursor:pointer">
