@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Detail Tagihan (Orang Tua - Clean Vector UI)
    ============================================================ */
 
@@ -128,7 +128,7 @@ Router.register("detail-tagihan", {
         <!-- Kartu Rincian Faktur / Invoice -->
         <div class="invoice-card">
           <div class="invoice-header">
-            <div class="invoice-school-title">Charis Institute</div>
+            <div class="invoice-school-title">CharisPay</div>
             <div class="invoice-subtitle">Faktur Pembayaran SPP Sekolah</div>
           </div>
 

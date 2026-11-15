@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Dashboard Orang Tua (Clean Vector Icons UI - Multi-Anak Support)
    ============================================================ */
 
@@ -592,7 +592,7 @@ function aksiBayarSPP() {
 function hubungiAdminWA() {
   const noWA = "6281234567890";
   const pesan = encodeURIComponent(
-    `Halo Admin Keuangan Charis Institute, saya orang tua siswa ingin berkonsultasi mengenai pembayaran SPP.`,
+    `Halo Admin Keuangan CharisPay, saya orang tua siswa ingin berkonsultasi mengenai pembayaran SPP.`,
   );
   window.open(`https://wa.me/${noWA}?text=${pesan}`, "_blank");
 }

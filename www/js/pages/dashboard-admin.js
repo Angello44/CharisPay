@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Dashboard Admin (Modern & Professional UI)
    ============================================================ */
 
@@ -16,7 +16,7 @@ Router.register("dashboard-admin", {
       <div class="profile-header">
         <div class="profile-avatar">${nama.charAt(0).toUpperCase()}</div>
         <div class="profile-name">${nama}</div>
-        <div class="profile-email">Bagian Keuangan Charis Institute</div>
+        <div class="profile-email">Bagian Keuangan CharisPay</div>
       </div>
 
       <div class="summary-grid" id="summary-admin">

@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Login
    ============================================================ */
 
@@ -10,9 +10,10 @@ Router.register("login", {
     return `
             <div class="auth-page">
                 <div class="auth-logo">
-                    <div class="auth-logo-icon">${Icons.student}</div>
-                    <h1>SPP Charis</h1>
-                    <p>Portal Pembayaran SPP Charis Institute</p>
+                    <img src="img/logo.png" alt="CharisPay"
+                         style="width:90px;height:90px;object-fit:contain;border-radius:18px;margin-bottom:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1)">
+                    <h1>CharisPay</h1>
+                    <p>Sistem Pembayaran SPP</p>
                 </div>
 
                 <div id="login-error" class="form-error" style="margin-bottom:12px"></div>

@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Pembayaran Transfer (Orang Tua - Clean Vector UI)
    ============================================================ */
 
@@ -55,7 +55,7 @@ Router.register("pembayaran", {
       }
 
       const norekBCA = "1234567890";
-      const atasNama = "Charis Institute";
+      const atasNama = "CharisPay";
 
       // Ambil catatan dari admin jika status adalah revisi atau ditolak
       let catatanAdminHtml = "";
@@ -194,7 +194,7 @@ Router.register("pembayaran", {
           <div class="card" style="background:#fffbeb;border-color:#fde68a;padding:18px">
             <div class="font-bold text-sm" style="color:#b45309;margin-bottom:6px">Pembayaran Tunai di Sekolah</div>
             <p class="text-xs text-secondary" style="line-height:1.5">
-              Silakan datang langsung ke loket Bagian Keuangan Charis Institute pada hari kerja (Senin &ndash; Jumat, 08.00 &ndash; 14.00 WIB). Petugas akan mencatat dan memberikan kwitansi resmi.
+              Silakan datang langsung ke loket Bagian Keuangan CharisPay pada hari kerja (Senin &ndash; Jumat, 08.00 &ndash; 14.00 WIB). Petugas akan mencatat dan memberikan kwitansi resmi.
             </p>
           </div>
         </div>

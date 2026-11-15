@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Tagihan SPP (Admin)
    ============================================================ */
 
@@ -201,7 +201,7 @@ Router.register("tagihan-admin", {
 });
 
 /* ============================================================
-   Helper Pilihan Jenjang & Kelas (Charis Institute: TK, SD, SMP)
+   Helper Pilihan Jenjang & Kelas (CharisPay: TK, SD, SMP)
    ============================================================ */
 
 function getBulkKelasOptions(labelSemua = "Semua Siswa (Semua Jenjang)") {

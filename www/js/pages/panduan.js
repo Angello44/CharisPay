@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Panduan / Pusat Bantuan (In-Place Accordion Cards)
    ============================================================ */
 
@@ -19,7 +19,7 @@ Router.register("panduan", {
         </div>
         <div style="font-size:18px;font-weight:800;letter-spacing:-0.2px">Pusat Bantuan SPP</div>
         <div style="font-size:13px;opacity:0.9;margin-top:4px">
-          Panduan praktis pembayaran untuk Orang Tua Siswa Charis Institute
+          Panduan praktis pembayaran untuk Orang Tua Siswa CharisPay
         </div>
       </div>
 
@@ -76,7 +76,7 @@ Router.register("panduan", {
 
               <div style="font-weight:700;margin:16px 0 8px;color:var(--text)">Pilihan 2: Pembayaran Tunai di Sekolah</div>
               ${langkah([
-                { no: 1, teks: "Datang langsung ke loket Bagian Keuangan Charis Institute." },
+                { no: 1, teks: "Datang langsung ke loket Bagian Keuangan CharisPay." },
                 { no: 2, teks: "Lakukan pembayaran tunai ke kasir. Petugas akan mencatat dan memberikan kwitansi resmi." },
               ])}
             </div>

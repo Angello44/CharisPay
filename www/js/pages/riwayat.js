@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Riwayat Pembayaran (Orang Tua - Multi Anak Support)
    ============================================================ */
 
@@ -183,7 +183,7 @@ async function showDetailRiwayat(id) {
         <div class="invoice-header" style="border-bottom:2px dashed var(--border);padding-bottom:12px;margin-bottom:14px;text-align:center">
           <div class="empty-state-icon" style="color:var(--primary);background:var(--primary-light);margin-bottom:6px">${Icons.receipt}</div>
           <div class="font-bold text-sm" style="color:var(--text)">Kwitansi Pembayaran</div>
-          <div class="text-xs text-secondary">Charis Institute &bull; ID: ${t.id.substring(0, 8).toUpperCase()}</div>
+          <div class="text-xs text-secondary">CharisPay &bull; ID: ${t.id.substring(0, 8).toUpperCase()}</div>
         </div>
 
         <div class="card-row">

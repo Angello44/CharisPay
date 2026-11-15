@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Halaman Registrasi
    ============================================================ */
 
@@ -10,7 +10,8 @@ Router.register("register", {
     return `
             <div class="auth-page">
                 <div class="auth-logo">
-                    <div class="auth-logo-icon">${Icons.student}</div>
+                    <img src="img/logo.png" alt="CharisPay"
+                         style="width:90px;height:90px;object-fit:contain;border-radius:18px;margin-bottom:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1)">
                     <h1>Daftar Akun Baru</h1>
                     <p>Portal Orang Tua / Wali Murid</p>
                 </div>
@@ -141,7 +142,10 @@ Router.register("register", {
         const cleanEmail = email.trim().toLowerCase();
 
         // 1. Buat akun Firebase Auth
-        const cred = await auth.createUserWithEmailAndPassword(cleanEmail, password);
+        const cred = await auth.createUserWithEmailAndPassword(
+          cleanEmail,
+          password,
+        );
 
         // 2. Cari apakah admin sudah mendaftarkan siswa dengan email ortu ini
         let autoSiswaIds = [];
@@ -185,7 +189,9 @@ Router.register("register", {
         await Auth.loadProfile();
 
         if (autoSiswaIds.length > 0) {
-          Router.toast(`Pendaftaran berhasil! Terhubung dengan ${autoSiswaIds.length} data anak.`);
+          Router.toast(
+            `Pendaftaran berhasil! Terhubung dengan ${autoSiswaIds.length} data anak.`,
+          );
         } else {
           Router.toast("Pendaftaran berhasil! Selamat datang di aplikasi SPP.");
         }
