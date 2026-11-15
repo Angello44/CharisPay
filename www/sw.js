@@ -2,7 +2,7 @@
    CharisPay — Service Worker (PWA Offline App Shell & Cache)
    ============================================================ */
 
-const CACHE_NAME = "charispay-shell-v1";
+const CACHE_NAME = "charispay-shell-v2";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -37,6 +37,7 @@ const PRECACHE_ASSETS = [
   "./js/pages/tagihan-admin.js",
   "./js/pages/verifikasi.js",
   "./js/pages/laporan.js",
+  "./js/pages/profil.js",
   "./js/index.js",
 ];
 
@@ -54,7 +55,7 @@ self.addEventListener("install", (event) => {
           }
         }
       })
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -69,10 +70,10 @@ self.addEventListener("activate", (event) => {
             if (key !== CACHE_NAME) {
               return caches.delete(key);
             }
-          })
+          }),
         );
       })
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -114,7 +115,6 @@ self.addEventListener("fetch", (event) => {
           const fallback = await caches.match("./index.html");
           if (fallback) return fallback;
         }
-      })
+      }),
   );
 });
-
