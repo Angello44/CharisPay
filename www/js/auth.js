@@ -8,7 +8,7 @@
 
 const Auth = {
   user: null, // objek Firebase user
-  role: null, // 'ortu' atau 'admin'
+  role: localStorage.getItem("auth_role") || null, // 'ortu' atau 'admin' (tersinkron di storage)
   profile: null, // data tambahan dari Firestore
 
   /** Cek apakah user sedang login */
@@ -18,12 +18,20 @@ const Auth = {
 
   /** Ambil role user ('ortu' atau 'admin') */
   getRole() {
-    return this.role;
+    return this.role || localStorage.getItem("auth_role");
+  },
+
+  /** Set role dan simpan ke localStorage */
+  setRole(r) {
+    this.role = r;
+    if (r) localStorage.setItem("auth_role", r);
+    else localStorage.removeItem("auth_role");
   },
 
   /** Cek apakah role user sesuai */
   hasRole(role) {
-    return this.role === role;
+    const current = this.role || localStorage.getItem("auth_role");
+    return current === role;
   },
 
   /** Ambil UID user */
@@ -37,10 +45,14 @@ const Auth = {
    */
   async loadProfile() {
     if (!this.user) return null;
-    const doc = await db.collection("users").doc(this.user.uid).get();
-    if (doc.exists) {
-      this.profile = doc.data();
-      this.role = this.profile.role || "ortu";
+    try {
+      const doc = await db.collection("users").doc(this.user.uid).get();
+      if (doc.exists) {
+        this.profile = doc.data();
+        this.setRole(this.profile.role || "ortu");
+      }
+    } catch (e) {
+      console.warn("Gagal memuat profil user:", e);
     }
     return this.profile;
   },
@@ -48,7 +60,6 @@ const Auth = {
   /** Ambil siswaIds (array) dari profil ortu — support multi anak */
   getSiswaIds() {
     if (!this.profile) return [];
-    // Support format lama (siswaId tunggal) maupun baru (siswaIds array)
     if (
       Array.isArray(this.profile.siswaIds) &&
       this.profile.siswaIds.length > 0
@@ -56,7 +67,7 @@ const Auth = {
       return this.profile.siswaIds;
     }
     if (this.profile.siswaId) {
-      return [this.profile.siswaId]; // backward compat
+      return [this.profile.siswaId];
     }
     return [];
   },
@@ -69,23 +80,33 @@ const Auth = {
 
   /** Logout user */
   async logout() {
-    await auth.signOut();
+    try {
+      await auth.signOut();
+    } catch (e) {
+      // ignore
+    }
     this.user = null;
-    this.role = null;
+    this.setRole(null);
     this.profile = null;
     Router.go("login");
   },
 };
 
 /* ---------- Listener status login Firebase ---------- */
-// Dipanggil otomatis saat user login/logout
 auth.onAuthStateChanged(async (user) => {
   if (user) {
     Auth.user = user;
     await Auth.loadProfile();
+    // Segera segarkan layout router setelah profil & role selesai diverifikasi
+    if (typeof Router !== "undefined" && Router.current && Router.routes[Router.current]) {
+      Router.updateLayout(Router.routes[Router.current]);
+    }
   } else {
     Auth.user = null;
-    Auth.role = null;
+    Auth.setRole(null);
     Auth.profile = null;
+    if (typeof Router !== "undefined" && Router.current && Router.routes[Router.current]) {
+      Router.updateLayout(Router.routes[Router.current]);
+    }
   }
 });

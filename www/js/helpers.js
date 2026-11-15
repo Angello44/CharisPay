@@ -54,6 +54,11 @@ const Helpers = {
         });
     },
 
+    /** Alias formatTanggal untuk kompatibilitas */
+    formatTanggal(timestamp) {
+        return this.tanggal(timestamp);
+    },
+
     /** Format periode dari "2026-11" → "November 2026" */
     periodeLabel(periode) {
         if (!periode) return '-';

@@ -1,5 +1,7 @@
 /* ============================================================
-   Dashboard Admin (Executive Laptop & Desktop Layout)
+   Dashboard Admin (Modern Executive Desktop Layout)
+   Desain terinspirasi dari referensi dashboard SaaS profesional
+   dengan bilah samping (sidebar) permanen di laptop/desktop.
    ============================================================ */
 
 Router.register("dashboard-admin", {
@@ -12,193 +14,181 @@ Router.register("dashboard-admin", {
 
   render() {
     const nama = (Auth.profile && Auth.profile.nama) || "Petugas Keuangan";
-    const tglSekarang = formatTanggalIndo(new Date());
 
     return `
-      <!-- 1. Hero Welcome & Quick Action Header -->
-      <div class="admin-dashboard-hero">
-        <div class="hero-text">
-          <div class="hero-date">${tglSekarang}</div>
-          <h1 class="hero-title">Selamat Datang, ${nama}</h1>
-          <p class="hero-subtitle">Berikut ringkasan operasional keuangan dan tagihan SPP Charis Institute hari ini.</p>
-        </div>
-        <div class="hero-actions">
-          <button class="btn btn-primary" onclick="Router.go('tagihan-admin')">
-            ${Icons.receipt} Buat Tagihan SPP
-          </button>
-          <button class="btn btn-secondary" onclick="Router.go('data-siswa')">
-            ${Icons.students} Tambah Siswa
-          </button>
-        </div>
-      </div>
-
-      <!-- 2. KPI Statistik Utama (4 Kartu Sejajar di Laptop) -->
-      <div class="kpi-grid" id="summary-admin">
-        <div class="kpi-card kpi-blue" onclick="Router.go('data-siswa')">
-          <div class="kpi-card-top">
-            <div class="kpi-icon-wrap">${Icons.students}</div>
-            <span class="kpi-tag">Data Siswa</span>
-          </div>
-          <div class="kpi-value" id="kpi-total-siswa">-</div>
-          <div class="kpi-label">Total Siswa Aktif</div>
-          <div class="kpi-desc">TK, SD, dan SMP</div>
-        </div>
-
-        <div class="kpi-card kpi-amber" onclick="Router.go('verifikasi')">
-          <div class="kpi-card-top">
-            <div class="kpi-icon-wrap">${Icons.verified}</div>
-            <span class="kpi-tag" id="kpi-tag-verif">Penting</span>
-          </div>
-          <div class="kpi-value" id="kpi-menunggu">-</div>
-          <div class="kpi-label">Perlu Verifikasi</div>
-          <div class="kpi-desc" id="kpi-desc-verif">Bukti transfer masuk</div>
-        </div>
-
-        <div class="kpi-card kpi-rose" onclick="Router.go('tagihan-admin')">
-          <div class="kpi-card-top">
-            <div class="kpi-icon-wrap">${Icons.wallet}</div>
-            <span class="kpi-tag">Tunggakan</span>
-          </div>
-          <div class="kpi-value" id="kpi-belum-bayar">-</div>
-          <div class="kpi-label">Tagihan Belum Lunas</div>
-          <div class="kpi-desc">Menunggu pembayaran</div>
-        </div>
-
-        <div class="kpi-card kpi-emerald" onclick="Router.go('laporan')">
-          <div class="kpi-card-top">
-            <div class="kpi-icon-wrap">${Icons.checkCircle}</div>
-            <span class="kpi-tag">Terkumpul</span>
-          </div>
-          <div class="kpi-value" id="kpi-lunas">-</div>
-          <div class="kpi-label">Tagihan Lunas</div>
-          <div class="kpi-desc" id="kpi-total-nominal">Total pelunasan SPP</div>
-        </div>
-      </div>
-
-      <!-- 3. Main Dashboard Desktop Layout (2 Kolom Lebar) -->
-      <div class="admin-dashboard-grid">
-        <!-- Kolom Kiri: Antrean Verifikasi & Rekap Penerimaan per Jenjang -->
-        <div class="dashboard-col-left">
-          <!-- Antrean Verifikasi Pembayaran -->
-          <div class="desktop-panel">
-            <div class="desktop-panel-header">
-              <div>
-                <h2 class="desktop-panel-title">Antrean Verifikasi Pembayaran</h2>
-                <p class="desktop-panel-subtitle">Bukti transfer terbaru yang diunggah orang tua dan membutuhkan konfirmasi</p>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="Router.go('verifikasi')">
-                Lihat Semua ${Icons.chevronRight}
-              </button>
-            </div>
-            <div id="dashboard-verif-queue">
-              <div class="loading">Memeriksa antrean pembayaran...</div>
-            </div>
-          </div>
-
-          <!-- Penerimaan SPP per Jenjang (TK, SD, SMP) -->
-          <div class="desktop-panel" style="margin-top:20px">
-            <div class="desktop-panel-header">
-              <div>
-                <h2 class="desktop-panel-title">Penerimaan SPP per Jenjang</h2>
-                <p class="desktop-panel-subtitle">Persentase kelunasan tagihan siswa sekolah</p>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="Router.go('laporan')">
-                Buka Laporan ${Icons.chevronRight}
-              </button>
-            </div>
-            <div id="dashboard-jenjang-stats">
-              <div class="loading">Memuat ringkasan jenjang...</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kolom Kanan: Akses Modul Cepat & Info Rekening Sekolah -->
-        <div class="dashboard-col-right">
-          <!-- Akses Modul Cepat -->
-          <div class="desktop-panel">
-            <div class="desktop-panel-header">
-              <div>
-                <h2 class="desktop-panel-title">Akses Modul Cepat</h2>
-                <p class="desktop-panel-subtitle">Fitur administrasi sekolah</p>
-              </div>
-            </div>
-            <div class="desktop-shortcut-grid">
-              <div class="desktop-shortcut-card" onclick="Router.go('data-siswa')">
-                <div class="shortcut-icon-box qa-blue">${Icons.students}</div>
-                <div class="shortcut-info">
-                  <div class="shortcut-title">Kelola Data Siswa</div>
-                  <div class="shortcut-desc">NIS, kelas, dan akun ortu</div>
+      <div class="dash-container">
+        <!-- BARIS UTAMA ATAS: Kolom Konten (Kiri) & Kolom Widget (Kanan) -->
+        <div class="dash-main-layout">
+          
+          <!-- ==================== KOLOM KIRI (UTAMA) ==================== -->
+          <div class="dash-content-area">
+            
+            <!-- 1. Header Baris Atas: Feature Card Ungu + 3 Kartu Metrik -->
+            <div class="dash-top-metrics">
+              
+              <!-- Large Highlight Feature Card (Mirip Referensi Kartu Ungu) -->
+              <div class="dash-feature-card">
+                <div class="feature-card-header">
+                  <div class="feature-icon-circle">
+                    ${Icons.receipt}
+                  </div>
+                  <span class="feature-badge">Terkumpul Kas</span>
                 </div>
-                <span class="shortcut-arrow">${Icons.chevronRight}</span>
+                <div class="feature-value" id="kpi-total-nominal">Rp 0</div>
+                <div class="feature-title">Total SPP Lunas Terverifikasi</div>
+                <p class="feature-desc">Akumulasi seluruh pembayaran SPP siswa yang telah disetujui petugas dan masuk kas sekolah.</p>
+                <div class="feature-glow-shape"></div>
               </div>
 
-              <div class="desktop-shortcut-card" onclick="Router.go('tagihan-admin')">
-                <div class="shortcut-icon-box qa-indigo">${Icons.receipt}</div>
-                <div class="shortcut-info">
-                  <div class="shortcut-title">Kelola Tagihan SPP</div>
-                  <div class="shortcut-desc">Buat tagihan massal & kasir tunai</div>
+              <!-- 3 Kartu Metrik Sejajar / Vertikal -->
+              <div class="dash-kpi-stack">
+                <!-- KPI 1: Total Siswa -->
+                <div class="dash-kpi-card" onclick="Router.go('data-siswa')" style="cursor:pointer">
+                  <div class="kpi-left-icon kpi-bg-blue">${Icons.students}</div>
+                  <div class="kpi-text-meta">
+                    <div class="kpi-num" id="kpi-total-siswa">-</div>
+                    <div class="kpi-label">Total Siswa Aktif</div>
+                    <div class="kpi-sub">TK, SD, dan SMP</div>
+                  </div>
+                  <span class="kpi-arrow">${Icons.chevronRight}</span>
                 </div>
-                <span class="shortcut-arrow">${Icons.chevronRight}</span>
+
+                <!-- KPI 2: Perlu Verifikasi -->
+                <div class="dash-kpi-card" onclick="Router.go('verifikasi')" style="cursor:pointer">
+                  <div class="kpi-left-icon kpi-bg-amber">${Icons.verified}</div>
+                  <div class="kpi-text-meta">
+                    <div class="kpi-num" id="kpi-menunggu">-</div>
+                    <div class="kpi-label">Perlu Verifikasi</div>
+                    <div class="kpi-sub" id="kpi-desc-verif">Bukti transfer masuk</div>
+                  </div>
+                  <span class="kpi-badge-alert" id="kpi-alert-badge" style="display:none">0</span>
+                </div>
+
+                <!-- KPI 3: Belum Bayar -->
+                <div class="dash-kpi-card" onclick="Router.go('tagihan-admin')" style="cursor:pointer">
+                  <div class="kpi-left-icon kpi-bg-rose">${Icons.warning}</div>
+                  <div class="kpi-text-meta">
+                    <div class="kpi-num" id="kpi-belum-bayar">-</div>
+                    <div class="kpi-label">Tagihan Belum Lunas</div>
+                    <div class="kpi-sub">Menunggu pembayaran</div>
+                  </div>
+                  <span class="kpi-arrow">${Icons.chevronRight}</span>
+                </div>
               </div>
 
-              <div class="desktop-shortcut-card" onclick="Router.go('verifikasi')">
-                <div class="shortcut-icon-box qa-emerald">${Icons.verified}</div>
-                <div class="shortcut-info">
-                  <div class="shortcut-title">Verifikasi Pembayaran</div>
-                  <div class="shortcut-desc">Pemeriksaan bukti transfer</div>
-                </div>
-                <span class="shortcut-arrow">${Icons.chevronRight}</span>
-              </div>
+            </div>
 
-              <div class="desktop-shortcut-card" onclick="Router.go('laporan')">
-                <div class="shortcut-icon-box qa-amber">${Icons.report}</div>
-                <div class="shortcut-info">
-                  <div class="shortcut-title">Laporan Keuangan</div>
-                  <div class="shortcut-desc">Rekap pemasukan SPP sekolah</div>
+            <!-- 2. Bar Chart Statistik Penerimaan SPP per Jenjang (Mirip Referensi Bar Chart) -->
+            <div class="dash-card-panel mt-20">
+              <div class="dash-panel-header">
+                <div>
+                  <h2 class="dash-panel-title">Statistik Penerimaan SPP per Jenjang</h2>
+                  <p class="dash-panel-subtitle">Perbandingan rasio kelunasan tagihan siswa sekolah (TK, SD, dan SMP)</p>
                 </div>
-                <span class="shortcut-arrow">${Icons.chevronRight}</span>
+                <div class="chart-legend-group">
+                  <span class="chart-legend-pill"><span class="legend-dot dot-tk"></span>TK / KB</span>
+                  <span class="chart-legend-pill"><span class="legend-dot dot-sd"></span>SD</span>
+                  <span class="chart-legend-pill"><span class="legend-dot dot-smp"></span>SMP</span>
+                </div>
               </div>
-
-              <div class="desktop-shortcut-card" onclick="Router.go('wali-kelas')">
-                <div class="shortcut-icon-box qa-cyan">${Icons.teacher}</div>
-                <div class="shortcut-info">
-                  <div class="shortcut-title">Data Wali Kelas</div>
-                  <div class="shortcut-desc">Kontak guru dan wali kelas</div>
-                </div>
-                <span class="shortcut-arrow">${Icons.chevronRight}</span>
-              </div>
-
-              <div class="desktop-shortcut-card" onclick="Router.go('nilai-admin')">
-                <div class="shortcut-icon-box qa-purple">${Icons.grade}</div>
-                <div class="shortcut-info">
-                  <div class="shortcut-title">Input Nilai Rapor</div>
-                  <div class="shortcut-desc">Nilai akhir kenaikan kelas</div>
-                </div>
-                <span class="shortcut-arrow">${Icons.chevronRight}</span>
+              <div id="dashboard-bar-chart">
+                <div class="loading">Memuat visualisasi statistik...</div>
               </div>
             </div>
+
+            <!-- 3. Tabel Data: Antrean Verifikasi Bukti Pembayaran (Mirip Referensi Data Table) -->
+            <div class="dash-card-panel mt-20">
+              <div class="dash-panel-header">
+                <div>
+                  <h2 class="dash-panel-title">Antrean Pembayaran Terbaru</h2>
+                  <p class="dash-panel-subtitle">Bukti transfer dari orang tua siswa yang membutuhkan persetujuan petugas</p>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="Router.go('verifikasi')">
+                  Buka Verifikasi ${Icons.chevronRight}
+                </button>
+              </div>
+              <div id="dashboard-verif-queue">
+                <div class="loading">Memeriksa antrean pembayaran...</div>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Info Rekening Kasir & Standar Operasional -->
-          <div class="desktop-panel" style="margin-top:20px;background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%);color:white;border:none">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:#60a5fa">
-                ${Icons.wallet}
-              </div>
-              <div>
-                <div style="font-weight:700;font-size:14.5px;color:white">Rekening Resmi Sekolah</div>
-                <div style="font-size:12px;color:#94a3b8">BCA Charis Institute</div>
+          <!-- ==================== KOLOM KANAN (WIDGET & KALENDER) ==================== -->
+          <div class="dash-sidebar-widgets">
+            
+            <!-- Widget 1: Kalender Mini Interaktif (Sesuai Gambar Referensi) -->
+            <div class="dash-card-panel">
+              <div id="dashboard-mini-calendar">
+                ${renderMiniCalendar()}
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;margin-bottom:12px">
-              <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Nomor Rekening BCA</div>
-              <div style="font-size:17px;font-weight:800;letter-spacing:1px;color:#38bdf8;margin:2px 0">123-456-7890</div>
-              <div style="font-size:12px;color:#cbd5e1">a.n. Yayasan Charis Institute</div>
+
+            <!-- Widget 2: Akses Cepat Modul Admin -->
+            <div class="dash-card-panel mt-20">
+              <div class="dash-panel-header mb-12">
+                <h3 class="dash-panel-title text-sm">Pintasan Cepat</h3>
+              </div>
+              <div class="quick-links-list">
+                <div class="quick-link-item" onclick="Router.go('tagihan-admin')">
+                  <div class="quick-link-icon">${Icons.receipt}</div>
+                  <div class="quick-link-info">
+                    <div class="quick-link-title">Buat Tagihan SPP</div>
+                    <div class="quick-link-desc">Tagihan massal / per jenjang</div>
+                  </div>
+                  <span class="quick-link-arrow">${Icons.chevronRight}</span>
+                </div>
+
+                <div class="quick-link-item" onclick="Router.go('data-siswa')">
+                  <div class="quick-link-icon">${Icons.students}</div>
+                  <div class="quick-link-info">
+                    <div class="quick-link-title">Tambah Siswa Baru</div>
+                    <div class="quick-link-desc">Registrasi & hubungkan akun ortu</div>
+                  </div>
+                  <span class="quick-link-arrow">${Icons.chevronRight}</span>
+                </div>
+
+                <div class="quick-link-item" onclick="Router.go('wali-kelas')">
+                  <div class="quick-link-icon">${Icons.teacher}</div>
+                  <div class="quick-link-info">
+                    <div class="quick-link-title">Data Wali Kelas</div>
+                    <div class="quick-link-desc">Atur nomor WhatsApp wali kelas</div>
+                  </div>
+                  <span class="quick-link-arrow">${Icons.chevronRight}</span>
+                </div>
+
+                <div class="quick-link-item" onclick="Router.go('nilai-admin')">
+                  <div class="quick-link-icon">${Icons.grade}</div>
+                  <div class="quick-link-info">
+                    <div class="quick-link-title">Input Nilai Rapor</div>
+                    <div class="quick-link-desc">Nilai akhir kenaikan kelas</div>
+                  </div>
+                  <span class="quick-link-arrow">${Icons.chevronRight}</span>
+                </div>
+              </div>
             </div>
-            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
-              Setiap verifikasi pembayaran transfer langsung memutakhirkan status tagihan dan kwitansi pada aplikasi orang tua secara real-time.
+
+            <!-- Widget 3: Rekening Resmi Kasir Sekolah -->
+            <div class="dash-card-panel mt-20 bank-card-dark">
+              <div class="bank-card-head">
+                <div class="bank-icon-wrap">${Icons.wallet}</div>
+                <div>
+                  <div class="bank-title">Rekening Kasir Sekolah</div>
+                  <div class="bank-sub">Bank Central Asia (BCA)</div>
+                </div>
+              </div>
+              <div class="bank-number-box">
+                <div class="bank-num-label">Nomor Rekening Resmi</div>
+                <div class="bank-num-val">123-456-7890</div>
+                <div class="bank-holder">a.n. Yayasan Charis Institute</div>
+              </div>
+              <p class="bank-note">
+                Gunakan acuan nomor rekening di atas saat memvalidasi keaslian struk transfer orang tua.
+              </p>
             </div>
+
           </div>
+
         </div>
       </div>
     `;
@@ -209,24 +199,51 @@ Router.register("dashboard-admin", {
   },
 });
 
-function formatTanggalIndo(date) {
-  const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-  const bulan = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
+/* ---------- Generator Kalender Mini (Bulan Ini) ---------- */
+
+function renderMiniCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
   ];
-  return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  let daysHtml = "";
+  for (let i = 0; i < firstDay; i++) {
+    daysHtml += `<div class="cal-cell empty"></div>`;
+  }
+  for (let d = 1; d <= totalDays; d++) {
+    const isToday = d === today ? "is-today" : "";
+    daysHtml += `<div class="cal-cell ${isToday}"><span>${d}</span></div>`;
+  }
+
+  return `
+    <div class="cal-widget">
+      <div class="cal-widget-top">
+        <div class="cal-current-title">${monthNames[month]} ${year}</div>
+        <div class="cal-nav-buttons">
+          <span class="cal-btn-prev">${Icons.arrowLeft}</span>
+          <span class="cal-btn-next">${Icons.chevronRight}</span>
+        </div>
+      </div>
+      <div class="cal-week-labels">
+        <span>M</span><span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span>
+      </div>
+      <div class="cal-days-grid">
+        ${daysHtml}
+      </div>
+    </div>
+  `;
 }
+
+/* ---------- Data Loader Dashboard ---------- */
 
 async function loadDashboardAdmin() {
   try {
@@ -252,49 +269,104 @@ async function loadDashboardAdmin() {
       }
     });
 
-    // Update KPI Card values
+    // 1. Update KPI Values
     const kpiSiswa = document.getElementById("kpi-total-siswa");
     if (kpiSiswa) kpiSiswa.textContent = totalSiswa;
 
     const kpiMenunggu = document.getElementById("kpi-menunggu");
     if (kpiMenunggu) kpiMenunggu.textContent = menunggu;
 
-    const kpiTagVerif = document.getElementById("kpi-tag-verif");
-    const kpiDescVerif = document.getElementById("kpi-desc-verif");
-    if (kpiTagVerif && kpiDescVerif) {
+    const alertBadge = document.getElementById("kpi-alert-badge");
+    const descVerif = document.getElementById("kpi-desc-verif");
+    if (alertBadge) {
       if (menunggu > 0) {
-        kpiTagVerif.textContent = `${menunggu} Antrean`;
-        kpiTagVerif.style.background = "#fee2e2";
-        kpiTagVerif.style.color = "#dc2626";
-        kpiDescVerif.textContent = "Segera periksa bukti transfer";
+        alertBadge.textContent = `${menunggu} Baru`;
+        alertBadge.style.display = "inline-flex";
+        if (descVerif) descVerif.textContent = "Segera verifikasi berkas";
       } else {
-        kpiTagVerif.textContent = "Semua Beres";
-        kpiTagVerif.style.background = "#ecfdf5";
-        kpiTagVerif.style.color = "#059669";
-        kpiDescVerif.textContent = "Tidak ada antrean tertunda";
+        alertBadge.style.display = "none";
+        if (descVerif) descVerif.textContent = "Semua berkas terverifikasi";
       }
     }
 
     const kpiBelum = document.getElementById("kpi-belum-bayar");
     if (kpiBelum) kpiBelum.textContent = belumBayar;
 
-    const kpiLunas = document.getElementById("kpi-lunas");
-    if (kpiLunas) kpiLunas.textContent = lunas;
-
     const kpiNominal = document.getElementById("kpi-total-nominal");
-    if (kpiNominal && totalNominalLunas > 0) {
-      kpiNominal.textContent = `Terkumpul ${Helpers.rupiah(totalNominalLunas)}`;
+    if (kpiNominal) {
+      kpiNominal.textContent = Helpers.rupiah(totalNominalLunas);
     }
 
-    // Render Antrean Verifikasi
+    // 2. Render Bar Chart Statistik per Jenjang
+    renderBarChart(tagihanSnap.docs);
+
+    // 3. Render Antrean Verifikasi Pembayaran
     renderVerifQueue(transaksiSnap.docs);
 
-    // Render Statistik Jenjang
-    renderJenjangStats(tagihanSnap.docs);
   } catch (err) {
     console.error("Dashboard admin error:", err);
   }
 }
+
+/* ---------- Visualisasi Bar Chart Jenjang ---------- */
+
+function renderBarChart(tagihanDocs) {
+  const container = document.getElementById("dashboard-bar-chart");
+  if (!container) return;
+
+  const stats = {
+    TK: { total: 0, lunas: 0, nominal: 0 },
+    SD: { total: 0, lunas: 0, nominal: 0 },
+    SMP: { total: 0, lunas: 0, nominal: 0 },
+  };
+
+  tagihanDocs.forEach((d) => {
+    const t = d.data();
+    const kelas = (t.kelas || "").toUpperCase();
+    let kategori = "SD";
+    if (kelas.includes("TK") || kelas.includes("KB")) kategori = "TK";
+    else if (kelas.includes("SMP") || kelas.includes("7") || kelas.includes("8") || kelas.includes("9"))
+      kategori = "SMP";
+
+    stats[kategori].total++;
+    stats[kategori].nominal += t.nominal || 0;
+    if (t.status === "lunas") stats[kategori].lunas++;
+  });
+
+  const jenjangConfigs = [
+    { key: "TK", title: "Jenjang TK / KB", color: "#38bdf8", bgTrack: "#e0f2fe" },
+    { key: "SD", title: "Jenjang SD", color: "#6366f1", bgTrack: "#eef2ff" },
+    { key: "SMP", title: "Jenjang SMP", color: "#f97316", bgTrack: "#ffedd5" },
+  ];
+
+  const barsHtml = jenjangConfigs.map((cfg) => {
+    const data = stats[cfg.key] || { total: 0, lunas: 0, nominal: 0 };
+    const pct = data.total > 0 ? Math.round((data.lunas / data.total) * 100) : 0;
+    const barHeight = Math.max(16, pct);
+
+    return `
+      <div class="chart-jenjang-item">
+        <div class="chart-pct-badge" style="color:${cfg.color};background:${cfg.bgTrack}">${pct}%</div>
+        <div class="chart-vertical-track" style="background:${cfg.bgTrack}">
+          <div class="chart-vertical-fill" style="height:${barHeight}%;background:${cfg.color}"></div>
+        </div>
+        <div class="chart-jenjang-label">${cfg.key}</div>
+        <div class="chart-jenjang-sub">${data.lunas}/${data.total} Lunas</div>
+        <div class="chart-jenjang-nominal">${Helpers.rupiah(data.nominal)}</div>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="chart-display-container">
+      <div class="chart-bars-row">
+        ${barsHtml}
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Antrean Verifikasi Pembayaran (Tabel Desktop) ---------- */
 
 function renderVerifQueue(docs) {
   const container = document.getElementById("dashboard-verif-queue");
@@ -302,42 +374,35 @@ function renderVerifQueue(docs) {
 
   if (docs.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:32px 16px;background:#f8fafc;border:1px dashed var(--border);border-radius:12px">
-        <div style="width:48px;height:48px;border-radius:50%;background:#ecfdf5;color:#10b981;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px">
-          ${Icons.checkCircle}
-        </div>
-        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:4px">
-          Semua Pembayaran Telah Terverifikasi
-        </div>
-        <div style="font-size:12.5px;color:var(--text-secondary)">
-          Saat ini tidak ada berkas transfer orang tua yang menunggu persetujuan.
-        </div>
+      <div class="queue-empty-box">
+        <div class="queue-empty-icon">${Icons.checkCircle}</div>
+        <div class="queue-empty-title">Semua Pembayaran Telah Terverifikasi</div>
+        <div class="queue-empty-desc">Tidak ada berkas transfer orang tua yang sedang menunggu konfirmasi saat ini.</div>
       </div>
     `;
     return;
   }
 
-  // Tampilkan maksimal 5 transaksi terbaru
   const list = docs.slice(0, 5);
   let rowsHtml = "";
 
   list.forEach((doc) => {
     const t = { id: doc.id, ...doc.data() };
-    const tanggal = t.createdAt ? Helpers.formatTanggal(t.createdAt.toDate()) : "-";
+    const tanggal = t.createdAt ? Helpers.tanggal(t.createdAt) : "-";
 
     rowsHtml += `
-      <tr class="queue-row" onclick="Router.go('verifikasi')" style="cursor:pointer">
+      <tr class="queue-table-row" onclick="Router.go('verifikasi')" style="cursor:pointer">
         <td>
-          <div style="font-weight:700;color:var(--text);font-size:13.5px">${t.namaSiswa || "-"}</div>
-          <div style="font-size:11.5px;color:var(--text-secondary)">NIS: ${t.nis || "-"} &bull; Kelas: ${t.kelas || "-"}</div>
+          <div class="queue-student-name">${t.namaSiswa || "-"}</div>
+          <div class="queue-student-meta">NIS: ${t.nis || "-"} &bull; Kelas: <span class="badge-kelas">${t.kelas || "-"}</span></div>
         </td>
         <td>
-          <span class="badge-soft badge-soft-primary" style="font-size:11.5px">${Helpers.periodeLabel(t.periode || "")}</span>
+          <span class="badge-soft badge-soft-primary">${Helpers.periodeLabel(t.periode || "")}</span>
         </td>
-        <td style="font-weight:700;color:var(--primary);font-size:13.5px">
+        <td class="queue-amount-cell">
           ${Helpers.rupiah(t.nominal || 0)}
         </td>
-        <td style="font-size:12px;color:var(--text-secondary)">
+        <td class="queue-date-cell">
           ${tanggal}
         </td>
         <td style="text-align:right">
@@ -367,53 +432,4 @@ function renderVerifQueue(docs) {
       </table>
     </div>
   `;
-}
-
-function renderJenjangStats(tagihanDocs) {
-  const container = document.getElementById("dashboard-jenjang-stats");
-  if (!container) return;
-
-  const stats = {
-    TK: { total: 0, lunas: 0, nominal: 0 },
-    SD: { total: 0, lunas: 0, nominal: 0 },
-    SMP: { total: 0, lunas: 0, nominal: 0 },
-  };
-
-  tagihanDocs.forEach((d) => {
-    const t = d.data();
-    const kelas = (t.kelas || "").toUpperCase();
-    let kategori = "SD";
-    if (kelas.includes("TK") || kelas.includes("KB")) kategori = "TK";
-    else if (kelas.includes("SMP") || kelas.includes("7") || kelas.includes("8") || kelas.includes("9"))
-      kategori = "SMP";
-
-    stats[kategori].total++;
-    stats[kategori].nominal += t.nominal || 0;
-    if (t.status === "lunas") stats[kategori].lunas++;
-  });
-
-  const cardsHtml = Object.entries(stats)
-    .map(([jenjang, data]) => {
-      const pct = data.total > 0 ? Math.round((data.lunas / data.total) * 100) : 0;
-      const color = jenjang === "TK" ? "#3b82f6" : jenjang === "SD" ? "#10b981" : "#8b5cf6";
-
-      return `
-        <div class="jenjang-card">
-          <div class="jenjang-card-header">
-            <div style="font-weight:800;font-size:14px;color:var(--text)">Jenjang ${jenjang}</div>
-            <div style="font-weight:700;font-size:12.5px;color:${color}">${pct}% Lunas</div>
-          </div>
-          <div class="jenjang-progress-bg">
-            <div class="jenjang-progress-bar" style="width:${pct}%;background:${color}"></div>
-          </div>
-          <div class="jenjang-card-footer">
-            <span>${data.lunas} / ${data.total} tagihan</span>
-            <span style="font-weight:600">${Helpers.rupiah(data.nominal)}</span>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-
-  container.innerHTML = `<div class="jenjang-grid">${cardsHtml}</div>`;
 }

@@ -48,19 +48,12 @@ const Router = {
 
   /**
    * Cek apakah saat ini harus memakai layout Desktop Admin:
-   * 1. Pengguna sudah login
-   * 2. Role adalah admin (bukan ortu)
-   * 3. Lebar layar desktop (>= 768px)
-   * 4. Halaman yang dibuka adalah halaman admin (route.role === 'admin')
+   * Layar desktop (>= 768px) dan membuka halaman admin (route.role === 'admin')
    */
   isDesktopAdmin(route) {
-    return (
-      typeof Auth !== "undefined" &&
-      Auth.isLoggedIn() &&
-      Auth.hasRole("admin") &&
-      window.innerWidth >= 768 &&
-      Boolean(route && route.role === "admin")
-    );
+    if (window.innerWidth < 768) return false;
+    if (!route || route.role !== "admin") return false;
+    return true;
   },
 
   /** Update header, nav, dan sidebar tanpa merender ulang konten halaman */
