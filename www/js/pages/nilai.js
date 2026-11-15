@@ -235,7 +235,11 @@ async function loadNilaiOrtu() {
             const kelasLama = getKelasSebelmunya(siswa.kelas);
 
             // Ambil wali kelas saat ini
-            const wali = await getWaliByKelas(siswa.kelas);
+            const walis = (typeof getSemuaWaliByKelas === "function")
+              ? await getSemuaWaliByKelas(siswa.kelas)
+              : [await getWaliByKelas(siswa.kelas)].filter(Boolean);
+            const namaWaliTampil = walis.length > 0 ? walis.map((w) => w.namaWali).join(", ") : "-";
+            const noHpWaliTampil = walis.map((w) => w.noHp).filter(Boolean).join(" / ");
 
             html += `
                 <div class="card">
@@ -246,12 +250,12 @@ async function loadNilaiOrtu() {
                     </div>
                     <div class="card-row">
                         <span class="card-label">Wali Kelas</span>
-                        <span class="card-value">${wali ? wali.namaWali : "-"}</span>
+                        <span class="card-value">${namaWaliTampil}</span>
                     </div>
-                    ${wali && wali.noHp ? `
+                    ${noHpWaliTampil ? `
                     <div class="card-row">
                         <span class="card-label">Kontak Wali</span>
-                        <span class="card-value font-semibold">${wali.noHp}</span>
+                        <span class="card-value font-semibold">${noHpWaliTampil}</span>
                     </div>` : ""}
                 </div>
             `;

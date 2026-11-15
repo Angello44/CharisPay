@@ -508,9 +508,13 @@ async function onKelasChange(kelas) {
   if (!kelas) { infoEl.textContent = ""; return; }
 
   infoEl.textContent = "Mencari wali kelas...";
-  const wali = await getWaliByKelas(kelas);
-  if (wali) {
-    infoEl.innerHTML = `Wali Kelas: <strong>${wali.namaWali}</strong>${wali.noHp ? " &middot; " + wali.noHp : ""}`;
+  const walis = (typeof getSemuaWaliByKelas === "function") 
+    ? await getSemuaWaliByKelas(kelas) 
+    : [await getWaliByKelas(kelas)].filter(Boolean);
+
+  if (walis.length > 0) {
+    const names = walis.map((w) => `<strong>${w.namaWali}</strong>${w.noHp ? " (" + w.noHp + ")" : ""}`).join(" &bull; ");
+    infoEl.innerHTML = `Wali Kelas: ${names}`;
     infoEl.style.color = "var(--success)";
   } else {
     infoEl.textContent = "Wali kelas belum diatur untuk kelas ini";

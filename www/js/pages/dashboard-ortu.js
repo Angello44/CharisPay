@@ -626,33 +626,59 @@ async function bukaModalWaliKelas() {
 
   let html = "";
   for (const s of _currentSiswaList) {
-    const wali = await getWaliByKelas(s.kelas);
+    const walis = (typeof getSemuaWaliByKelas === "function")
+      ? await getSemuaWaliByKelas(s.kelas)
+      : [await getWaliByKelas(s.kelas)].filter(Boolean);
+
+    let waliRows = "";
+    if (walis.length === 0) {
+      waliRows = `
+        <div class="card-row">
+          <span class="card-label">Nama Wali Kelas</span>
+          <span class="card-value font-bold">Belum ditentukan</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Kontak</span>
+          <span class="card-value text-secondary">Silakan hubungi bagian tata usaha</span>
+        </div>
+      `;
+    } else {
+      walis.forEach((wali, idx) => {
+        const labelWali = walis.length > 1 ? `Wali Kelas ${idx + 1}` : "Wali Kelas";
+        waliRows += `
+          <div style="${idx > 0 ? 'margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);' : ''}">
+            <div class="card-row">
+              <span class="card-label">${labelWali}</span>
+              <span class="card-value font-bold">${wali.namaWali || "-"}</span>
+            </div>
+            ${
+              wali.noHp
+                ? `
+              <div class="card-row">
+                <span class="card-label">Nomor WhatsApp</span>
+                <span class="card-value font-semibold">${wali.noHp}</span>
+              </div>
+              <button class="btn btn-success btn-sm mt-8 w-full"
+                      onclick="window.open('https://wa.me/${wali.noHp.replace(/[^0-9]/g, "")}?text=Halo%20Bapak%2FIbu%20Wali%20Kelas%2C%20saya%20wali%20dari%20${encodeURIComponent(s.nama)}', '_blank')">
+                ${Icons.chat} Hubungi ${wali.namaWali || labelWali}
+              </button>
+            `
+                : `
+              <div class="card-row">
+                <span class="card-label">Kontak</span>
+                <span class="card-value text-secondary">No. WhatsApp belum diisi</span>
+              </div>
+            `
+            }
+          </div>
+        `;
+      });
+    }
+
     html += `
       <div class="card" style="margin-bottom:12px">
         <div class="card-title">${Icons.student} ${s.nama} (${s.kelas})</div>
-        <div class="card-row">
-          <span class="card-label">Nama Wali Kelas</span>
-          <span class="card-value font-bold">${wali ? wali.namaWali : "Belum ditentukan"}</span>
-        </div>
-        ${
-          wali && wali.noHp
-            ? `
-          <div class="card-row">
-            <span class="card-label">Nomor WhatsApp</span>
-            <span class="card-value font-semibold">${wali.noHp}</span>
-          </div>
-          <button class="btn btn-success btn-sm mt-8 w-full"
-                  onclick="window.open('https://wa.me/${wali.noHp.replace(/[^0-9]/g, "")}?text=Halo%20Bapak%2FIbu%20Wali%20Kelas%2C%20saya%20wali%20dari%20${encodeURIComponent(s.nama)}', '_blank')">
-            ${Icons.chat} Hubungi via WhatsApp
-          </button>
-        `
-            : `
-          <div class="card-row">
-            <span class="card-label">Kontak</span>
-            <span class="card-value text-secondary">Silakan hubungi bagian tata usaha</span>
-          </div>
-        `
-        }
+        ${waliRows}
       </div>
     `;
   }

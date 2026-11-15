@@ -113,29 +113,61 @@ function renderWaliKelas(list) {
   let html = "";
   Object.entries(groups).forEach(([jenjang, items]) => {
     if (items.length === 0) return;
-    html += `<div class="section-title">${jenjang}</div>`;
-    items.forEach((w) => {
-      html += `
-                <div class="list-item">
-                    <div class="list-item-left">
-                        <div class="list-item-title">${w.kelas}</div>
-                        <div class="list-item-subtitle">
-                            ${w.namaWali || "-"}
-                            ${w.noHp ? " &bull; " + w.noHp : ""}
-                        </div>
-                    </div>
-                    <div class="flex gap-8">
-                        <button class="btn btn-secondary btn-sm" onclick="editWali('${w.id}')">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="hapusWali('${w.id}', '${w.kelas}')">Hapus</button>
-                    </div>
-                </div>
-            `;
+
+    // Urutkan items dalam jenjang sesuai urutan kelas resmi
+    items.sort((a, b) => {
+      const idxA = URUTAN_KELAS.indexOf(a.kelas);
+      const idxB = URUTAN_KELAS.indexOf(b.kelas);
+      if (idxA !== idxB) return idxA - idxB;
+      // Jika kelas sama (misal 2 wali di KBTK), urutkan berdasarkan nama
+      return (a.namaWali || "").localeCompare(b.namaWali || "");
     });
+
+    const cardsHtml = items.map((w) => {
+      // Cek apakah kelas ini memiliki lebih dari 1 wali kelas
+      const coWali = items.filter((other) => other.kelas === w.kelas);
+      let roleLabel = "";
+      if (coWali.length > 1) {
+        const orderIdx = coWali.findIndex((item) => item.id === w.id);
+        roleLabel = `<span class="badge-soft badge-soft-primary" style="font-size:11px;margin-left:8px;font-weight:700">Wali ${orderIdx + 1}</span>`;
+      }
+
+      return `
+        <div class="list-item">
+          <div class="list-item-left">
+            <div class="list-item-title" style="display:flex;align-items:center">
+              <span>${w.kelas}</span>
+              ${roleLabel}
+            </div>
+            <div class="list-item-subtitle">
+              ${w.namaWali || "-"}
+              ${w.noHp ? " &bull; " + w.noHp : ""}
+            </div>
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-secondary btn-sm" onclick="editWali('${w.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="hapusWali('${w.id}', '${w.kelas}')">Hapus</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    html += `
+      <div class="wali-jenjang-block">
+        <div class="section-title">
+          <span>Jenjang ${jenjang}</span>
+          <span class="badge-wali-count">${items.length} Guru</span>
+        </div>
+        <div class="wali-group-grid">
+          ${cardsHtml}
+        </div>
+      </div>
+    `;
   });
 
   container.innerHTML =
     html ||
-    '<div class="empty-state"><div class="empty-state-text">Belum ada data</div></div>';
+    '<div class="empty-state"><div class="empty-state-text">Belum ada data wali kelas</div></div>';
 }
 
 function showFormWali(data = null) {
@@ -152,7 +184,7 @@ function showFormWali(data = null) {
   if (subEl) {
     subEl.textContent = data
       ? "Perbarui guru wali untuk kelas terpilih"
-      : "Atur guru wali untuk kelas terpilih";
+      : "Atur guru wali untuk kelas terpilih (maksimal 2 guru per kelas)";
   }
   document.getElementById("modal-wali").classList.remove("hidden");
 }
@@ -182,10 +214,10 @@ async function simpanWali() {
     return;
   }
 
-  // Cek duplikat kelas (kecuali saat edit)
-  const dup = _waliCached.find((w) => w.kelas === kelas && w.id !== editId);
-  if (dup) {
-    errEl.textContent = "Kelas ini sudah punya wali kelas";
+  // Cek jumlah wali kelas untuk kelas ini (diizinkan hingga 2 wali kelas per kelas)
+  const existingWali = _waliCached.filter((w) => w.kelas === kelas && w.id !== editId);
+  if (existingWali.length >= 2) {
+    errEl.textContent = `Kelas ${kelas} sudah memiliki 2 wali kelas (maksimal 2 guru).`;
     return;
   }
 
@@ -226,18 +258,28 @@ async function hapusWali(id, kelas) {
   }
 }
 
-/** Ambil nama wali kelas berdasarkan nama kelas — dipakai di halaman lain */
-async function getWaliByKelas(kelas) {
-  if (!kelas) return null;
+/** Ambil seluruh wali kelas untuk suatu kelas (array hingga 2 guru) */
+async function getSemuaWaliByKelas(kelas) {
+  if (!kelas) return [];
   // Cek cache dulu
-  const cached = _waliCached.find((w) => w.kelas === kelas);
-  if (cached) return cached;
+  const cached = _waliCached.filter((w) => w.kelas === kelas);
+  if (cached.length > 0) return cached;
 
   // Query Firestore
-  const snap = await db
-    .collection("walikelas")
-    .where("kelas", "==", kelas)
-    .get();
-  if (snap.empty) return null;
-  return { id: snap.docs[0].id, ...snap.docs[0].data() };
+  try {
+    const snap = await db
+      .collection("walikelas")
+      .where("kelas", "==", kelas)
+      .get();
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    return [];
+  }
+}
+
+/** Ambil data wali kelas utama berdasarkan nama kelas — backward compat */
+async function getWaliByKelas(kelas) {
+  if (!kelas) return null;
+  const list = await getSemuaWaliByKelas(kelas);
+  return list.length > 0 ? list[0] : null;
 }
