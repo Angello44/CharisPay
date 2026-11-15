@@ -206,52 +206,65 @@ Router.register("pembayaran", {
         </button>
       `;
 
-      document.getElementById("metode-bayar").addEventListener("change", function () {
-        const isTransfer = this.value === "transfer";
-        document.getElementById("section-transfer").style.display = isTransfer ? "block" : "none";
-        document.getElementById("section-tunai").style.display = isTransfer ? "none" : "block";
-        const btn = document.getElementById("btn-kirim-bayar");
-        btn.textContent = isTransfer ? "Kirim Bukti Pembayaran" : "Kembali ke Tagihan";
-      });
+      document
+        .getElementById("metode-bayar")
+        .addEventListener("change", function () {
+          const isTransfer = this.value === "transfer";
+          document.getElementById("section-transfer").style.display = isTransfer
+            ? "block"
+            : "none";
+          document.getElementById("section-tunai").style.display = isTransfer
+            ? "none"
+            : "block";
+          const btn = document.getElementById("btn-kirim-bayar");
+          btn.textContent = isTransfer
+            ? "Kirim Bukti Pembayaran"
+            : "Kembali ke Tagihan";
+        });
 
-      document.getElementById("file-bukti").addEventListener("change", function () {
-        const file = this.files[0];
-        if (!file) return;
+      document
+        .getElementById("file-bukti")
+        .addEventListener("change", function () {
+          const file = this.files[0];
+          if (!file) return;
 
-        const maxSize = 15 * 1024 * 1024; // Maksimal 15MB (akan otomatis dikompres sebelum dikirim)
-        if (file.size > maxSize) {
-          document.getElementById("error-pembayaran").textContent = "Ukuran file terlalu besar, maksimal 15MB";
-          this.value = "";
-          return;
-        }
+          const maxSize = 15 * 1024 * 1024; // Maksimal 15MB (akan otomatis dikompres sebelum dikirim)
+          if (file.size > maxSize) {
+            document.getElementById("error-pembayaran").textContent =
+              "Ukuran file terlalu besar, maksimal 15MB";
+            this.value = "";
+            return;
+          }
 
-        document.getElementById("error-pembayaran").textContent = "";
+          document.getElementById("error-pembayaran").textContent = "";
 
-        // Sembunyikan dropzone dashed box agar tampilan rapi
-        document.getElementById("upload-area").style.display = "none";
-        document.getElementById("preview-bukti").style.display = "block";
-        document.getElementById("preview-filename").textContent = file.name;
+          // Sembunyikan dropzone dashed box agar tampilan rapi
+          document.getElementById("upload-area").style.display = "none";
+          document.getElementById("preview-bukti").style.display = "block";
+          document.getElementById("preview-filename").textContent = file.name;
 
-        const ext = (file.name.split(".").pop() || "").toLowerCase();
-        const isPdf = file.type === "application/pdf" || ext === "pdf";
-        document.getElementById("preview-filesize").textContent =
-          "Ukuran: " + formatFileSize(file.size) + (!isPdf ? " (dikompres otomatis agar upload kilat)" : "");
+          const ext = (file.name.split(".").pop() || "").toLowerCase();
+          const isPdf = file.type === "application/pdf" || ext === "pdf";
+          document.getElementById("preview-filesize").textContent =
+            "Ukuran: " +
+            formatFileSize(file.size) +
+            (!isPdf ? " (dikompres otomatis agar upload kilat)" : "");
 
-        if (isPdf) {
-          document.getElementById("preview-img").style.display = "none";
-          const pdfEl = document.getElementById("preview-pdf");
-          pdfEl.style.display = "flex";
-          pdfEl.innerHTML = `${Icons.fileText} <span>Dokumen PDF: ${file.name}</span>`;
-        } else {
-          document.getElementById("preview-img").style.display = "block";
-          document.getElementById("preview-pdf").style.display = "none";
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            document.getElementById("preview-img").src = e.target.result;
-          };
-          reader.readAsDataURL(file);
-        }
-      });
+          if (isPdf) {
+            document.getElementById("preview-img").style.display = "none";
+            const pdfEl = document.getElementById("preview-pdf");
+            pdfEl.style.display = "flex";
+            pdfEl.innerHTML = `${Icons.fileText} <span>Dokumen PDF: ${file.name}</span>`;
+          } else {
+            document.getElementById("preview-img").style.display = "block";
+            document.getElementById("preview-pdf").style.display = "none";
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              document.getElementById("preview-img").src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
     } catch (err) {
       console.error(err);
       Helpers.errorState("pembayaran-content", "Gagal memuat: " + err.message);
@@ -318,7 +331,7 @@ function kompresGambar(file, maxDimensi = 1280, kualitas = 0.82) {
               const compressedFile = new File(
                 [blob],
                 file.name.replace(/\.[^.]+$/, ".jpg"),
-                { type: "image/jpeg", lastModified: Date.now() }
+                { type: "image/jpeg", lastModified: Date.now() },
               );
               resolve({ file: compressedFile, base64: dataUrl });
             } else {
@@ -326,7 +339,7 @@ function kompresGambar(file, maxDimensi = 1280, kualitas = 0.82) {
             }
           },
           "image/jpeg",
-          kualitas
+          kualitas,
         );
       };
       img.onerror = () => resolve({ file, base64: null });
@@ -363,7 +376,8 @@ async function kirimPembayaran(tagihanId) {
     validExts.includes(ext);
 
   if (!isImageOrPdf) {
-    errEl.textContent = "Format file tidak didukung. Gunakan file JPG, PNG, atau PDF";
+    errEl.textContent =
+      "Format file tidak didukung. Gunakan file JPG, PNG, atau PDF";
     return;
   }
 
@@ -373,61 +387,27 @@ async function kirimPembayaran(tagihanId) {
 
   try {
     let uploadFile = file;
-    let fallbackBase64 = null;
 
-    // 1. Kompresi gambar instan client-side untuk memangkas waktu upload
+    // 1. Kompresi gambar sebelum upload
     if (!isPdf) {
       Helpers.btnLoading("btn-kirim-bayar", "Mengoptimalkan foto...");
-      const compResult = await kompresGambar(file, 1280, 0.82);
-      uploadFile = compResult.file;
-      fallbackBase64 = compResult.base64;
+      uploadFile = await Cloudinary.compress(file, 1280, 0.82);
     }
 
     const uid = Auth.getUid();
-    const safeExt = isPdf ? "pdf" : "jpg";
-    const fileName = `bukti-transfer/${uid}/${tagihanId}_${Date.now()}.${safeExt}`;
-    const storageRef = storage.ref(fileName);
 
     let buktiUrl = "";
 
-    // 2. Upload dengan progress real-time & proteksi timeout 12s
+    // 2. Upload ke Cloudinary dengan progress real-time
     try {
       Helpers.btnLoading("btn-kirim-bayar", "Mengunggah bukti: 0%...");
 
-      const uploadTask = storageRef.put(uploadFile);
-
-      const uploadPromise = new Promise((resolve, reject) => {
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            if (snapshot.totalBytes > 0) {
-              const percent = Math.round(
-                (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-              );
-              Helpers.btnLoading("btn-kirim-bayar", `Mengunggah: ${percent}%...`);
-            }
-          },
-          (err) => reject(err),
-          async () => {
-            const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
-            resolve(downloadUrl);
-          }
-        );
+      buktiUrl = await Cloudinary.upload(uploadFile, (persen) => {
+        Helpers.btnLoading("btn-kirim-bayar", `Mengunggah: ${persen}%...`);
       });
-
-      // Timeout 12 detik agar tidak pernah stuck buffering
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout upload storage")), 12000)
-      );
-
-      buktiUrl = await Promise.race([uploadPromise, timeoutPromise]);
-    } catch (storageErr) {
-      console.warn("Storage upload timeout/gagal, menggunakan jalur cepat base64:", storageErr);
-      if (fallbackBase64) {
-        buktiUrl = fallbackBase64;
-      } else {
-        throw storageErr;
-      }
+    } catch (uploadErr) {
+      console.error("Upload Cloudinary gagal:", uploadErr);
+      throw new Error("Gagal upload bukti: " + uploadErr.message);
     }
 
     Helpers.btnLoading("btn-kirim-bayar", "Menyimpan transaksi...");
