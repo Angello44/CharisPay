@@ -1,31 +1,36 @@
 /* ============================================================
-   Router — Hash-based SPA Router
+   Router — Hash-based SPA Router (Desktop Admin & Mobile HP Support)
    ============================================================
    Navigasi antar halaman pakai URL hash (#/halaman).
    Setiap halaman mendaftarkan dirinya via Router.register().
 
-   Contoh:
-     #splash           → halaman splash
-     #login            → halaman login
-     #detail-tagihan/123 → detail tagihan dengan ID 123
+   Prinsip Desain:
+   - Admin di layar desktop (>=768px): Tampilan Desktop dengan sidebar navigasi lengkap.
+   - Orang Tua di SEMUA layar (HP maupun monitor desktop): Tetap tampilan HP (Mobile View).
+   - Halaman publik (login, register, splash): Tampilan HP rapi di tengah tanpa sidebar.
    ============================================================ */
 
 const Router = {
-  routes: {}, // daftar semua route terdaftar
+  routes: {},    // daftar semua route terdaftar
   current: null, // nama route yang sedang aktif
-  history: [], // untuk tombol back
+  history: [],   // untuk tombol back
 
-  /** Inisialisasi router — dengarkan perubahan hash */
+  /** Inisialisasi router — dengarkan perubahan hash dan perubahan ukuran layar */
   init() {
     window.addEventListener("hashchange", () => this.handle());
-    // Re-render nav saat resize (mobile ↔ desktop)
+
+    // Tanggapi resize layar secara dinamis (mobile <-> desktop)
+    let resizeTimer = null;
     window.addEventListener("resize", () => {
-      const route = this.routes[this.current];
-      if (route) {
-        this.renderHeader(route);
-        this.renderNav(route);
-      }
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const route = this.routes[this.current];
+        if (route) {
+          this.updateLayout(route);
+        }
+      }, 100);
     });
+
     this.handle();
   },
 
@@ -41,6 +46,29 @@ const Router = {
     window.location.hash = hash;
   },
 
+  /**
+   * Cek apakah saat ini harus memakai layout Desktop Admin:
+   * 1. Pengguna sudah login
+   * 2. Role adalah admin (bukan ortu)
+   * 3. Lebar layar desktop (>= 768px)
+   * 4. Halaman yang dibuka adalah halaman admin (route.role === 'admin')
+   */
+  isDesktopAdmin(route) {
+    return (
+      typeof Auth !== "undefined" &&
+      Auth.isLoggedIn() &&
+      Auth.hasRole("admin") &&
+      window.innerWidth >= 768 &&
+      Boolean(route && route.role === "admin")
+    );
+  },
+
+  /** Update header, nav, dan sidebar tanpa merender ulang konten halaman */
+  updateLayout(route) {
+    this.renderHeader(route);
+    this.renderNav(route);
+  },
+
   /** Proses route saat ini berdasarkan hash URL */
   handle() {
     const hash = window.location.hash.slice(1) || "splash";
@@ -50,7 +78,7 @@ const Router = {
 
     const route = this.routes[name];
 
-    // Route tidak ditemukan → balik ke splash
+    // Route tidak ditemukan -> balik ke splash
     if (!route) {
       return this.go("splash");
     }
@@ -64,7 +92,7 @@ const Router = {
     if (route.role && !Auth.hasRole(route.role)) {
       // Redirect ke dashboard sesuai role
       return this.go(
-        Auth.hasRole("admin") ? "dashboard-admin" : "dashboard-ortu",
+        Auth.hasRole("admin") ? "dashboard-admin" : "dashboard-ortu"
       );
     }
 
@@ -78,7 +106,7 @@ const Router = {
     const content = document.getElementById("app-content");
     content.innerHTML = route.render ? route.render(params) : "";
 
-    // Render bottom navigation
+    // Render navigasi (desktop sidebar ATAU mobile bottom nav)
     this.renderNav(route);
 
     // Jalankan init halaman (binding event, dll)
@@ -90,6 +118,7 @@ const Router = {
   /** Render header bar atas */
   renderHeader(route) {
     const header = document.getElementById("app-header");
+    if (!header) return;
 
     // Halaman tanpa header (splash, login, register)
     if (route.header === false) {
@@ -97,6 +126,48 @@ const Router = {
       return;
     }
 
+    const isDesktop = this.isDesktopAdmin(route);
+
+    if (isDesktop) {
+      // Header untuk Desktop Admin
+      header.style.display = "flex";
+      const adminName = (Auth.profile && Auth.profile.nama) || "Petugas Keuangan";
+
+      let actionHtml = "";
+      if (route.action && route.action !== "Auth.logout()") {
+        let actionLabel = "Aksi";
+        if (route.action.includes("showFormSiswa")) actionLabel = "Tambah Siswa";
+        else if (route.action.includes("showPilihJenisTagihan") || route.action.includes("showFormTagihan")) actionLabel = "Buat Tagihan";
+        else if (route.action.includes("showFormWali")) actionLabel = "Tambah Wali Kelas";
+
+        actionHtml = `
+          <button class="btn btn-primary btn-sm desktop-header-action" onclick="${route.action}">
+            ${route.actionIcon || Icons.plus}
+            <span>${actionLabel}</span>
+          </button>
+        `;
+      }
+
+      header.innerHTML = `
+        <div class="desktop-header-left">
+          <div class="desktop-header-breadcrumb">CharisPay &rsaquo; Admin Portal</div>
+          <div class="desktop-header-title">${route.title || "Dashboard Admin"}</div>
+        </div>
+        <div class="desktop-header-right">
+          ${actionHtml}
+          <div class="desktop-admin-badge">
+            <div class="admin-avatar-small">${adminName.charAt(0).toUpperCase()}</div>
+            <div class="admin-badge-info">
+              <span class="admin-badge-name">${adminName}</span>
+              <span class="admin-badge-role">Petugas Keuangan</span>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Header default Mobile (untuk Orang Tua & Admin di ponsel)
     header.style.display = "flex";
     let html = "";
 
@@ -111,100 +182,142 @@ const Router = {
     // Judul
     html += `<div class="header-title">${route.title || ""}</div>`;
 
-    // Aksi kanan — sembunyikan logout di desktop admin (sudah ada di sidebar)
-    const isDesktopAdmin = Auth.hasRole("admin") && window.innerWidth >= 768;
+    // Aksi kanan pada mobile
     if (route.action) {
-      const isLogoutAction = route.action === "Auth.logout()";
-      if (!isDesktopAdmin || !isLogoutAction) {
-        html += `<div class="header-action" onclick="${route.action}">${route.actionIcon || Icons.logout}</div>`;
-      }
+      html += `<div class="header-action" onclick="${route.action}">${route.actionIcon || Icons.logout}</div>`;
     }
 
     header.innerHTML = html;
   },
 
-  /** Render bottom navigation */
+  /** Render navigasi: Sidebar Desktop ATAU Bottom Nav Mobile */
   renderNav(route) {
     const nav = document.getElementById("app-nav");
     const sidebar = document.getElementById("app-sidebar");
+    const app = document.getElementById("app");
+    if (!nav || !app) return;
 
-    // Halaman tanpa nav
-    if (!route.nav) {
-      nav.style.display = "none";
-      if (sidebar) sidebar.style.display = "none";
-      document.getElementById("app").classList.remove("has-sidebar");
-      return;
-    }
+    const isDesktop = this.isDesktopAdmin(route);
 
-    const isAdmin = Auth.hasRole("admin");
-    const isDesktop = window.innerWidth >= 768;
-
-    if (isAdmin && isDesktop) {
-      // Desktop admin → tampilkan sidebar, sembunyikan bottom nav
-      nav.style.display = "none";
+    if (isDesktop) {
+      // 1. TAMPILAN DESKTOP ADMIN
+      app.classList.add("has-sidebar");
       if (sidebar) {
         sidebar.style.display = "flex";
         this.renderSidebar();
       }
-      document.getElementById("app").classList.add("has-sidebar");
+      nav.style.display = "none";
+      nav.innerHTML = "";
     } else {
-      // Mobile atau ortu → bottom nav biasa
-      nav.style.display = "flex";
-      if (sidebar) sidebar.style.display = "none";
-      document.getElementById("app").classList.remove("has-sidebar");
+      // 2. TAMPILAN HP (ORANG TUA & HALAMAN PUBLIK & ADMIN MOBILE)
+      app.classList.remove("has-sidebar");
+      if (sidebar) {
+        sidebar.style.display = "none";
+        sidebar.innerHTML = "";
+      }
 
-      const items = isAdmin ? NAV_ITEMS.admin : NAV_ITEMS.ortu;
+      // Halaman tanpa bottom nav (splash, login, register, detail-tagihan, dsb)
+      if (!route.nav) {
+        nav.style.display = "none";
+        nav.innerHTML = "";
+        return;
+      }
+
+      // Render mobile bottom navigation
+      nav.style.display = "flex";
+      const isAdmin = Auth.hasRole("admin");
+      const items = isAdmin ? NAV_ITEMS.admin_mobile : NAV_ITEMS.ortu;
       let html = '<div class="nav-inner">';
       for (const item of items) {
         const active = this.current === item.route ? "active" : "";
         html += `
-                    <a class="nav-item ${active}" href="#${item.route}">
-                        ${item.icon}
-                        <span>${item.label}</span>
-                    </a>
-                `;
+          <a class="nav-item ${active}" href="#${item.route}">
+            ${item.icon}
+            <span>${item.label}</span>
+          </a>
+        `;
       }
       html += "</div>";
       nav.innerHTML = html;
     }
   },
 
-  /** Render sidebar admin (desktop) */
+  /** Render sidebar admin untuk tampilan desktop */
   renderSidebar() {
     const sidebar = document.getElementById("app-sidebar");
     if (!sidebar) return;
 
-    const items = NAV_ITEMS.admin;
+    const items = NAV_ITEMS.admin_sidebar;
     let menuHtml = "";
     for (const item of items) {
       const active = this.current === item.route ? "active" : "";
+      const badgeHtml = item.badge ? `<span id="${item.badge}" class="sidebar-badge" style="display:none">0</span>` : "";
       menuHtml += `
-                <a class="sidebar-item ${active}" href="#${item.route}">
-                    <span class="sidebar-icon">${item.icon}</span>
-                    <span class="sidebar-label">${item.label}</span>
-                </a>
-            `;
+        <a class="sidebar-item ${active}" href="#${item.route}">
+          <span class="sidebar-icon">${item.icon}</span>
+          <span class="sidebar-label">${item.label}</span>
+          ${badgeHtml}
+        </a>
+      `;
     }
 
+    const adminName = (Auth.profile && Auth.profile.nama) || "Petugas Keuangan";
+
     sidebar.innerHTML = `
-            <div class="sidebar-logo">
-                <img src="img/logo.png" alt="CharisPay"
-                     style="width:48px;height:48px;object-fit:contain">
-                <span class="sidebar-logo-text">CharisPay</span>
-            </div>
-            <nav class="sidebar-menu">${menuHtml}</nav>
-            <div class="sidebar-footer">
-                <button class="sidebar-logout" onclick="Auth.logout()">
-                    <span>${Icons.logout || "⏻"}</span>
-                    <span>Keluar</span>
-                </button>
-            </div>
-        `;
+      <div class="sidebar-logo">
+        <img src="img/logo.png" alt="CharisPay" style="width:40px;height:40px;object-fit:contain;border-radius:8px">
+        <div class="sidebar-logo-text-group">
+          <span class="sidebar-logo-title">CharisPay</span>
+          <span class="sidebar-logo-subtitle">Portal Admin SPP</span>
+        </div>
+      </div>
+
+      <div class="sidebar-user-card">
+        <div class="sidebar-user-avatar">${adminName.charAt(0).toUpperCase()}</div>
+        <div class="sidebar-user-meta">
+          <div class="sidebar-user-name">${adminName}</div>
+          <div class="sidebar-user-role">Bagian Keuangan</div>
+        </div>
+      </div>
+
+      <div class="sidebar-nav-label">Navigasi Utama</div>
+      <nav class="sidebar-menu">${menuHtml}</nav>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-logout" onclick="Auth.logout()">
+          <span>${Icons.logout}</span>
+          <span>Keluar Akun</span>
+        </button>
+      </div>
+    `;
+
+    // Ambil data notifikasi verifikasi untuk sidebar badge
+    this.updateSidebarBadges();
+  },
+
+  /** Update badge notifikasi verifikasi pada sidebar */
+  async updateSidebarBadges() {
+    try {
+      if (typeof db !== "undefined") {
+        const snap = await db.collection("transaksi").where("status", "==", "menunggu").get();
+        const count = snap.size;
+        const badgeEl = document.getElementById("badge-verif-sidebar");
+        if (badgeEl) {
+          if (count > 0) {
+            badgeEl.textContent = count;
+            badgeEl.style.display = "inline-flex";
+          } else {
+            badgeEl.style.display = "none";
+          }
+        }
+      }
+    } catch (e) {
+      // Abaikan bila offline/error
+    }
   },
 
   /** Tampilkan toast notification */
   toast(message) {
-    // Hapus toast lama
     const old = document.querySelector(".toast");
     if (old) old.remove();
 
@@ -217,51 +330,100 @@ const Router = {
   },
 };
 
-/* ---------- Konfigurasi Bottom Navigation per Role ---------- */
+/* ---------- Konfigurasi Navigasi per Role & Device ---------- */
 
 const NAV_ITEMS = {
+  // Mobile Bottom Nav untuk Orang Tua (Selalu HP)
   ortu: [
     {
       route: "dashboard-ortu",
       label: "Beranda",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>',
+      icon: Icons.wallet,
     },
     {
       route: "tagihan",
       label: "Tagihan",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>',
+      icon: Icons.receipt,
     },
     {
       route: "riwayat",
       label: "Riwayat",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>',
+      icon: Icons.history,
     },
     {
       route: "panduan",
       label: "Bantuan",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>',
+      icon: Icons.guide,
     },
   ],
-  admin: [
+
+  // Mobile Bottom Nav untuk Admin (saat dibuka di layar HP < 768px)
+  admin_mobile: [
     {
       route: "dashboard-admin",
       label: "Beranda",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>',
+      icon: Icons.receipt,
     },
     {
       route: "data-siswa",
       label: "Siswa",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>',
+      icon: Icons.students,
     },
     {
       route: "verifikasi",
       label: "Verifikasi",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+      icon: Icons.verified,
     },
     {
       route: "laporan",
       label: "Laporan",
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>',
+      icon: Icons.report,
+    },
+  ],
+
+  // Sidebar Desktop Lengkap untuk Admin (saat dibuka di monitor >= 768px)
+  admin_sidebar: [
+    {
+      route: "dashboard-admin",
+      label: "Dashboard",
+      icon: Icons.receipt,
+      badge: null,
+    },
+    {
+      route: "data-siswa",
+      label: "Data Siswa",
+      icon: Icons.students,
+      badge: null,
+    },
+    {
+      route: "tagihan-admin",
+      label: "Kelola Tagihan",
+      icon: Icons.wallet,
+      badge: null,
+    },
+    {
+      route: "verifikasi",
+      label: "Verifikasi Bayar",
+      icon: Icons.verified,
+      badge: "badge-verif-sidebar",
+    },
+    {
+      route: "laporan",
+      label: "Laporan Keuangan",
+      icon: Icons.report,
+      badge: null,
+    },
+    {
+      route: "wali-kelas",
+      label: "Data Wali Kelas",
+      icon: Icons.teacher,
+      badge: null,
+    },
+    {
+      route: "nilai-admin",
+      label: "Input Nilai Siswa",
+      icon: Icons.grade,
+      badge: null,
     },
   ],
 };

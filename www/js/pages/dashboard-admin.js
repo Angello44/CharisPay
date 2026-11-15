@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    Dashboard Admin (Modern & Professional UI)
    ============================================================ */
 
@@ -28,70 +28,72 @@ Router.register("dashboard-admin", {
 
       <div class="section-title">Menu Utama Admin</div>
 
-      <div class="list-item" onclick="Router.go('data-siswa')">
-        <div class="list-item-left">
-          <div class="icon-circle qa-blue">${Icons.students}</div>
-          <div class="list-item-content">
-            <div class="list-item-title">Data Siswa</div>
-            <div class="list-item-subtitle">Kelola NIS, kelas, dan data orang tua</div>
+      <div class="admin-quick-menu">
+        <div class="list-item" onclick="Router.go('data-siswa')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-blue">${Icons.students}</div>
+            <div class="list-item-content">
+              <div class="list-item-title">Data Siswa</div>
+              <div class="list-item-subtitle">Kelola NIS, kelas, dan data orang tua</div>
+            </div>
           </div>
+          <span class="list-item-chevron">${Icons.chevronRight}</span>
         </div>
-        <span class="list-item-chevron">${Icons.chevronRight}</span>
-      </div>
 
-      <div class="list-item" onclick="Router.go('tagihan-admin')">
-        <div class="list-item-left">
-          <div class="icon-circle qa-indigo">${Icons.receipt}</div>
-          <div class="list-item-content">
-            <div class="list-item-title">Kelola Tagihan SPP</div>
-            <div class="list-item-subtitle">Buat tagihan baru & catat pembayaran tunai</div>
+        <div class="list-item" onclick="Router.go('tagihan-admin')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-indigo">${Icons.receipt}</div>
+            <div class="list-item-content">
+              <div class="list-item-title">Kelola Tagihan SPP</div>
+              <div class="list-item-subtitle">Buat tagihan baru & catat pembayaran tunai</div>
+            </div>
           </div>
+          <span class="list-item-chevron">${Icons.chevronRight}</span>
         </div>
-        <span class="list-item-chevron">${Icons.chevronRight}</span>
-      </div>
 
-      <div class="list-item" onclick="Router.go('verifikasi')">
-        <div class="list-item-left">
-          <div class="icon-circle qa-emerald">${Icons.verified}</div>
-          <div class="list-item-content">
-            <div class="list-item-title">Verifikasi Pembayaran</div>
-            <div class="list-item-subtitle" id="info-verifikasi">Memeriksa bukti transfer...</div>
+        <div class="list-item" onclick="Router.go('verifikasi')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-emerald">${Icons.verified}</div>
+            <div class="list-item-content">
+              <div class="list-item-title">Verifikasi Pembayaran</div>
+              <div class="list-item-subtitle" id="info-verifikasi">Memeriksa bukti transfer...</div>
+            </div>
           </div>
+          <span id="badge-verifikasi"><span class="list-item-chevron">${Icons.chevronRight}</span></span>
         </div>
-        <span id="badge-verifikasi"><span class="list-item-chevron">${Icons.chevronRight}</span></span>
-      </div>
 
-      <div class="list-item" onclick="Router.go('laporan')">
-        <div class="list-item-left">
-          <div class="icon-circle qa-amber">${Icons.report}</div>
-          <div class="list-item-content">
-            <div class="list-item-title">Laporan Keuangan</div>
-            <div class="list-item-subtitle">Rekapitulasi pemasukan SPP sekolah</div>
+        <div class="list-item" onclick="Router.go('laporan')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-amber">${Icons.report}</div>
+            <div class="list-item-content">
+              <div class="list-item-title">Laporan Keuangan</div>
+              <div class="list-item-subtitle">Rekapitulasi pemasukan SPP sekolah</div>
+            </div>
           </div>
+          <span class="list-item-chevron">${Icons.chevronRight}</span>
         </div>
-        <span class="list-item-chevron">${Icons.chevronRight}</span>
-      </div>
 
-      <div class="list-item" onclick="Router.go('wali-kelas')">
-        <div class="list-item-left">
-          <div class="icon-circle qa-cyan">${Icons.teacher}</div>
-          <div class="list-item-content">
-            <div class="list-item-title">Data Wali Kelas</div>
-            <div class="list-item-subtitle">Atur wali kelas dan kontak per kelas</div>
+        <div class="list-item" onclick="Router.go('wali-kelas')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-cyan">${Icons.teacher}</div>
+            <div class="list-item-content">
+              <div class="list-item-title">Data Wali Kelas</div>
+              <div class="list-item-subtitle">Atur wali kelas dan kontak per kelas</div>
+            </div>
           </div>
+          <span class="list-item-chevron">${Icons.chevronRight}</span>
         </div>
-        <span class="list-item-chevron">${Icons.chevronRight}</span>
-      </div>
 
-      <div class="list-item" onclick="Router.go('nilai-admin')">
-        <div class="list-item-left">
-          <div class="icon-circle qa-purple">${Icons.grade}</div>
-          <div class="list-item-content">
-            <div class="list-item-title">Input Nilai Siswa</div>
-            <div class="list-item-subtitle">Kelola nilai rata-rata akhir kenaikan kelas</div>
+        <div class="list-item" onclick="Router.go('nilai-admin')">
+          <div class="list-item-left">
+            <div class="icon-circle qa-purple">${Icons.grade}</div>
+            <div class="list-item-content">
+              <div class="list-item-title">Input Nilai Siswa</div>
+              <div class="list-item-subtitle">Kelola nilai rata-rata akhir kenaikan kelas</div>
+            </div>
           </div>
+          <span class="list-item-chevron">${Icons.chevronRight}</span>
         </div>
-        <span class="list-item-chevron">${Icons.chevronRight}</span>
       </div>
     `;
   },
