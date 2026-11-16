@@ -10,10 +10,18 @@ Router.register("laporan", {
 
   render() {
     return `
-            <div class="form-group flex gap-8">
+            <div class="form-group flex gap-8" style="margin-bottom:10px;flex-wrap:wrap">
                 <input type="month" id="filter-periode-laporan"
-                       style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
-                <button class="btn btn-primary btn-sm" onclick="loadLaporan()">Filter</button>
+                       style="flex:1;min-width:160px;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+                <button class="btn btn-primary btn-sm" onclick="loadLaporan()" style="width:auto;padding:0 20px">Filter</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm" onclick="exportLaporanPembayaranExcel()" style="width:auto;display:inline-flex;align-items:center;gap:6px">
+                    ${Icons.receipt} Export Laporan Pembayaran
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="exportDaftarTunggakanExcel()" style="width:auto;display:inline-flex;align-items:center;gap:6px">
+                    ${Icons.alertCircle} Export Daftar Tunggakan
+                </button>
             </div>
             <div id="laporan-content"><div class="loading">Memuat laporan...</div></div>
         `;
@@ -80,6 +88,51 @@ async function loadLaporan() {
       if (!totalPerKelas[kelas]) totalPerKelas[kelas] = 0;
       totalPerKelas[kelas]++;
     });
+
+    // Breakdown per jenis tagihan
+    const perJenis = {};
+    const listJenis = typeof DAFTAR_JENIS_TAGIHAN !== "undefined"
+      ? DAFTAR_JENIS_TAGIHAN
+      : ["SPP", "Uang Gedung", "Uang Outing Class", "Uang Seragam", "Lainnya"];
+    listJenis.forEach((j) => {
+      perJenis[j] = { total: 0, nominal: 0, lunasCount: 0, lunasNominal: 0 };
+    });
+
+    tagihanSnap.docs.forEach((d) => {
+      const t = d.data();
+      const j = t.jenisTagihan || "SPP";
+      if (!perJenis[j]) {
+        perJenis[j] = { total: 0, nominal: 0, lunasCount: 0, lunasNominal: 0 };
+      }
+      perJenis[j].total++;
+      perJenis[j].nominal += t.nominal || 0;
+      if (t.status === "lunas") {
+        perJenis[j].lunasCount++;
+        perJenis[j].lunasNominal += t.nominal || 0;
+      }
+    });
+
+    const jenisRows = Object.entries(perJenis)
+      .filter(([_, data]) => data.total > 0)
+      .map(([jenis, data]) => {
+        const pLunas =
+          data.nominal > 0
+            ? ((data.lunasNominal / data.nominal) * 100).toFixed(0)
+            : 0;
+        return `
+          <div class="card-row" style="align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-light)">
+            <div>
+              <div class="font-semibold text-sm" style="color:var(--text)">${jenis}</div>
+              <div class="text-xs text-secondary">${data.total} tagihan &bull; ${data.lunasCount} lunas (${pLunas}%)</div>
+            </div>
+            <div style="text-align:right">
+              <div class="font-bold text-sm" style="color:var(--text)">${Helpers.rupiah(data.nominal)}</div>
+              <div class="text-xs" style="color:var(--success)">Lunas: ${Helpers.rupiah(data.lunasNominal)}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
 
     const totalBelumTerkumpul = totalTagihan - totalTerkumpul;
     const persen =
@@ -149,6 +202,11 @@ async function loadLaporan() {
             </div>
 
             <div class="card">
+                <div class="card-title">Breakdown Berdasarkan Jenis Tagihan</div>
+                ${jenisRows || '<p class="text-sm text-secondary">Belum ada data tagihan pada periode ini</p>'}
+            </div>
+
+            <div class="card">
                 <div class="card-title">Berdasarkan Metode Pembayaran</div>
                 <div class="card-row">
                     <span class="card-label">Transfer Bank</span>
@@ -211,7 +269,7 @@ async function loadSiswaBelumBayar(periode) {
                 <div class="list-item">
                     <div class="list-item-left">
                         <div class="list-item-title">${t.namaSiswa || "-"}</div>
-                        <div class="list-item-subtitle">${t.kelas || "-"} &middot; SPP ${Helpers.periodeLabel(t.periode)}</div>
+                        <div class="list-item-subtitle">${t.kelas || "-"} &middot; <span class="badge" style="background:#eff6ff;color:var(--primary);font-size:10.5px;padding:1px 6px;font-weight:700;border:1px solid #bfdbfe">${t.jenisTagihan || "SPP"}</span> &middot; ${Helpers.periodeLabel(t.periode)}</div>
                     </div>
                     <div class="list-item-right">
                         <div class="list-item-amount">${Helpers.rupiah(t.nominal)}</div>
@@ -223,5 +281,153 @@ async function loadSiswaBelumBayar(periode) {
       .join("");
   } catch (err) {
     console.error(err);
+  }
+}
+
+/* ============================================================
+   Export Excel Menggunakan SheetJS
+   ============================================================ */
+
+async function exportLaporanPembayaranExcel() {
+  if (typeof XLSX === "undefined") {
+    Router.toast("Library SheetJS belum termuat. Silakan periksa koneksi internet.");
+    return;
+  }
+
+  const periode = document.getElementById("filter-periode-laporan").value;
+  Router.toast("Menyiapkan data laporan pembayaran...");
+
+  try {
+    let q = db.collection("transaksi");
+    if (periode) q = q.where("periode", "==", periode);
+    const snap = await q.get();
+
+    if (snap.empty) {
+      Router.toast("Tidak ada data transaksi untuk diexport pada periode ini");
+      return;
+    }
+
+    const rows = snap.docs.map((doc) => {
+      const t = doc.data();
+      let tglBayar = "-";
+      if (t.tanggal) {
+        tglBayar = t.tanggal;
+      } else if (t.createdAt) {
+        tglBayar = Helpers.tanggal(t.createdAt);
+      }
+      return {
+        "Nama Siswa": t.namaSiswa || "-",
+        "NIS": t.nis || "-",
+        "Kelas": t.kelas || "-",
+        "Jenis Tagihan": t.jenisTagihan || "SPP",
+        "Periode": t.periode || "-",
+        "Nominal": t.nominal || 0,
+        "Metode": t.metode === "tunai" ? "Tunai di Sekolah" : "Transfer Bank",
+        "Status": (t.status || "").toUpperCase(),
+        "Tanggal Bayar": tglBayar,
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows, {
+      header: [
+        "Nama Siswa",
+        "NIS",
+        "Kelas",
+        "Jenis Tagihan",
+        "Periode",
+        "Nominal",
+        "Metode",
+        "Status",
+        "Tanggal Bayar",
+      ],
+    });
+
+    ws["!cols"] = [
+      { wch: 22 },
+      { wch: 14 },
+      { wch: 10 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 16 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan Pembayaran");
+    const fileName = `laporan-pembayaran-${periode || "semua"}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    Router.toast(`File berhasil diunduh: ${fileName}`);
+  } catch (err) {
+    console.error("Export Laporan error:", err);
+    Router.toast("Gagal export laporan: " + err.message);
+  }
+}
+
+async function exportDaftarTunggakanExcel() {
+  if (typeof XLSX === "undefined") {
+    Router.toast("Library SheetJS belum termuat. Silakan periksa koneksi internet.");
+    return;
+  }
+
+  const periode = document.getElementById("filter-periode-laporan").value;
+  Router.toast("Menyiapkan data tunggakan...");
+
+  try {
+    let q = db
+      .collection("tagihan")
+      .where("status", "in", ["belum", "revisi", "ditolak"]);
+    if (periode) q = q.where("periode", "==", periode);
+    const snap = await q.get();
+
+    if (snap.empty) {
+      Router.toast("Tidak ada tagihan tertunggak pada periode ini");
+      return;
+    }
+
+    const rows = snap.docs.map((doc) => {
+      const t = doc.data();
+      return {
+        "Nama Siswa": t.namaSiswa || "-",
+        "NIS": t.nis || "-",
+        "Kelas": t.kelas || "-",
+        "Jenis Tagihan": t.jenisTagihan || "SPP",
+        "Periode": t.periode || "-",
+        "Nominal": t.nominal || 0,
+        "Jatuh Tempo": t.jatuhTempo || "-",
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows, {
+      header: [
+        "Nama Siswa",
+        "NIS",
+        "Kelas",
+        "Jenis Tagihan",
+        "Periode",
+        "Nominal",
+        "Jatuh Tempo",
+      ],
+    });
+
+    ws["!cols"] = [
+      { wch: 22 },
+      { wch: 14 },
+      { wch: 10 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 16 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Daftar Tunggakan");
+    const fileName = `tunggakan-${periode || "semua"}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    Router.toast(`File berhasil diunduh: ${fileName}`);
+  } catch (err) {
+    console.error("Export Tunggakan error:", err);
+    Router.toast("Gagal export tunggakan: " + err.message);
   }
 }

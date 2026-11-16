@@ -268,6 +268,7 @@ function renderDaftarTagihanPerAnak() {
                       t.status === "revisi" ||
                       t.status === "ditolak";
                     const icon = isLunas ? Icons.checkCircle : Icons.receipt;
+                    const jenis = t.jenisTagihan || "SPP";
 
                     return `
               <div class="bill-card" onclick="Router.go('detail-tagihan', '${t.id}')"
@@ -277,8 +278,9 @@ function renderDaftarTagihanPerAnak() {
                     ${icon}
                   </div>
                   <div class="bill-card-info">
-                    <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
+                    <div class="bill-card-title">${jenis} &bull; ${Helpers.periodeLabel(t.periode)}</div>
                     <div class="bill-card-meta">
+                      <span class="badge" style="background:#eff6ff;color:var(--primary);font-size:10.5px;padding:1px 6px;font-weight:600;border:1px solid #bfdbfe">${jenis}</span>
                       ${t.jatuhTempo ? `<span>Jatuh tempo: ${t.jatuhTempo}</span>` : ""}
                     </div>
                   </div>

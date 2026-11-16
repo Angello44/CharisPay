@@ -129,16 +129,32 @@ const Router = {
       let actionHtml = "";
       if (route.action && route.action !== "Auth.logout()") {
         let actionLabel = "Aksi";
-        if (route.action.includes("showFormSiswa")) actionLabel = "Tambah Siswa";
-        else if (route.action.includes("showPilihJenisTagihan") || route.action.includes("showFormTagihan")) actionLabel = "Buat Tagihan";
-        else if (route.action.includes("showFormWali")) actionLabel = "Tambah Wali Kelas";
+        if (route.action.includes("showFormSiswa")) {
+          actionHtml = `
+            <button class="btn btn-secondary btn-sm desktop-header-action" onclick="showModalImportSiswa()" style="width:auto">
+              ${Icons.receipt}
+              <span>Import Excel</span>
+            </button>
+            <button class="btn btn-outline btn-sm desktop-header-action" onclick="exportDataSiswaExcel()" style="width:auto">
+              ${Icons.fileText}
+              <span>Export Excel</span>
+            </button>
+            <button class="btn btn-primary btn-sm desktop-header-action" onclick="${route.action}" style="width:auto">
+              ${route.actionIcon || Icons.plus}
+              <span>Tambah Siswa</span>
+            </button>
+          `;
+        } else {
+          if (route.action.includes("showPilihJenisTagihan") || route.action.includes("showFormTagihan")) actionLabel = "Buat Tagihan";
+          else if (route.action.includes("showFormWali")) actionLabel = "Tambah Wali Kelas";
 
-        actionHtml = `
-          <button class="btn btn-primary btn-sm desktop-header-action" onclick="${route.action}">
-            ${route.actionIcon || Icons.plus}
-            <span>${actionLabel}</span>
-          </button>
-        `;
+          actionHtml = `
+            <button class="btn btn-primary btn-sm desktop-header-action" onclick="${route.action}">
+              ${route.actionIcon || Icons.plus}
+              <span>${actionLabel}</span>
+            </button>
+          `;
+        }
       }
 
       header.innerHTML = `
@@ -177,7 +193,18 @@ const Router = {
 
     // Aksi kanan pada mobile
     if (route.action) {
-      html += `<div class="header-action" onclick="${route.action}">${route.actionIcon || Icons.logout}</div>`;
+      if (route.action.includes("showFormSiswa")) {
+        html += `
+          <div style="display:flex;align-items:center;gap:6px">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="showModalImportSiswa()" style="padding:4px 9px;font-size:11.5px;width:auto;height:32px;display:inline-flex;align-items:center;border-radius:6px">
+              Import
+            </button>
+            <div class="header-action" onclick="${route.action}">${route.actionIcon || Icons.plus}</div>
+          </div>
+        `;
+      } else {
+        html += `<div class="header-action" onclick="${route.action}">${route.actionIcon || Icons.logout}</div>`;
+      }
     }
 
     header.innerHTML = html;

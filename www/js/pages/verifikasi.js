@@ -196,6 +196,7 @@ async function aksiBuktiBayar(aksi) {
       status: aksi,
       catatan: catatan || "",
       verifiedBy: Auth.getUid(),
+      verifiedByNama: (Auth.profile && Auth.profile.nama) || "Petugas Keuangan CharisPay",
       verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 

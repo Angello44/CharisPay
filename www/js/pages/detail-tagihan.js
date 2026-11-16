@@ -138,8 +138,12 @@ Router.register("detail-tagihan", {
           </div>
 
           <div class="card-row">
+            <span class="card-label">Jenis Tagihan</span>
+            <span class="card-value font-bold" style="color:var(--primary)">${t.jenisTagihan || "SPP"}</span>
+          </div>
+          <div class="card-row">
             <span class="card-label">Periode Pembayaran</span>
-            <span class="card-value">SPP ${Helpers.periodeLabel(t.periode)}</span>
+            <span class="card-value">${Helpers.periodeLabel(t.periode)}</span>
           </div>
           <div class="card-row">
             <span class="card-label">Nama Siswa</span>

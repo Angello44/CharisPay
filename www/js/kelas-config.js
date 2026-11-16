@@ -1,6 +1,14 @@
 /* ============================================================
-   Konfigurasi Kelas — dipakai di seluruh aplikasi
+   Konfigurasi Kelas & Tagihan — dipakai di seluruh aplikasi
    ============================================================ */
+
+const DAFTAR_JENIS_TAGIHAN = [
+  "SPP",
+  "Uang Gedung",
+  "Uang Outing Class",
+  "Uang Seragam",
+  "Lainnya",
+];
 
 const DAFTAR_KELAS = [
     // KBTK & TK

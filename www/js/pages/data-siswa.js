@@ -12,6 +12,21 @@ Router.register("data-siswa", {
 
   render() {
     return `
+      <!-- Toolbar Aksi Siswa (Import & Export Excel) -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="showModalImportSiswa()" style="width:auto;display:inline-flex;align-items:center;gap:6px">
+            ${Icons.receipt} Import Excel
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="exportDataSiswaExcel()" style="width:auto;display:inline-flex;align-items:center;gap:6px">
+            ${Icons.fileText} Export Data Siswa
+          </button>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="showFormSiswa()" style="width:auto;display:inline-flex;align-items:center;gap:6px">
+          ${Icons.plus} Tambah Siswa
+        </button>
+      </div>
+
       <div style="position:relative;margin-bottom:14px">
         <input type="text" id="search-siswa" placeholder="Cari nama siswa, NIS, atau kelas..." style="width:100%;padding:12px 14px 12px 38px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14.5px;outline:none;background:#fff">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-secondary);display:flex">
@@ -100,6 +115,83 @@ Router.register("data-siswa", {
           <div class="modal-actions" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
             <button type="button" class="btn btn-secondary" onclick="tutupFormSiswa()">Batal</button>
             <button type="button" class="btn btn-primary" id="btn-simpan-siswa" onclick="simpanSiswa()">Simpan Siswa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Import Excel Siswa -->
+      <div id="modal-import-siswa" class="modal-overlay hidden" onclick="if(event.target===this) tutupModalImportSiswa()">
+        <div class="modal" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;max-width:680px">
+          <div class="modal-header">
+            <div>
+              <div class="modal-title">Import Data Siswa dari Excel</div>
+              <div class="modal-subtitle">Unggah berkas spreadsheet (.xlsx / .csv) untuk input siswa massal</div>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="tutupModalImportSiswa()" aria-label="Tutup">
+              ${Icons.cross}
+            </button>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div class="card" style="background:#f8fafc;border:1px solid var(--border);padding:14px;margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div>
+                  <div class="font-bold text-sm">Unduh Template Excel</div>
+                  <div class="text-xs text-secondary">Kolom: Nama, NIS, Kelas, Jenis Kelamin (L/P), Tahun Masuk</div>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="downloadTemplateImportSiswa()" style="width:auto;display:inline-flex;align-items:center;gap:6px">
+                  ${Icons.receipt} Unduh Template
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Pilih File Excel / CSV (.xlsx, .xls, .csv)</label>
+              <input type="file" id="input-file-excel-siswa" accept=".xlsx, .xls, .csv" onchange="handleExcelSiswaFile(event)" style="padding:10px;border:1px dashed var(--primary);border-radius:8px;width:100%;background:#f0f7ff">
+              <div class="form-hint">Format kolom harus sesuai template di atas</div>
+            </div>
+
+            <!-- Preview Data & Validasi Status -->
+            <div id="import-siswa-preview-wrapper" style="display:none;margin-top:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+                <div class="font-bold text-sm">Preview Data Siswa:</div>
+                <div id="import-siswa-stats" style="display:flex;gap:6px"></div>
+              </div>
+              <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left">
+                  <thead style="background:#f1f5f9;position:sticky;top:0;font-weight:700">
+                    <tr>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">No</th>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">Nama</th>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">NIS</th>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">Kelas</th>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">JK</th>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">Tahun</th>
+                      <th style="padding:8px 10px;border-bottom:1px solid var(--border)">Validasi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="import-siswa-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Progress Box saat Import -->
+            <div id="import-siswa-progress" style="display:none;margin-top:10px">
+              <div class="text-sm text-secondary mb-4" id="import-siswa-progress-text">Memproses penyimpanan siswa...</div>
+              <div style="background:var(--border);border-radius:4px;height:8px;overflow:hidden">
+                <div id="import-siswa-progress-bar" style="background:var(--primary);height:8px;width:0%;transition:width 0.2s"></div>
+              </div>
+            </div>
+
+            <!-- Ringkasan Hasil Import -->
+            <div id="import-siswa-summary" style="display:none;margin-top:12px"></div>
+          </div>
+
+          <div class="modal-actions" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            <button type="button" class="btn btn-secondary" onclick="tutupModalImportSiswa()">Tutup</button>
+            <button type="button" class="btn btn-primary" id="btn-konfirmasi-import-siswa" onclick="konfirmasiImportSiswa()" style="display:none">
+              Konfirmasi Import
+            </button>
           </div>
         </div>
       </div>
@@ -519,5 +611,402 @@ async function onKelasChange(kelas) {
   } else {
     infoEl.textContent = "Wali kelas belum diatur untuk kelas ini";
     infoEl.style.color = "var(--warning)";
+  }
+}
+
+/* ============================================================
+   Import & Export Excel Data Siswa (SheetJS)
+   ============================================================ */
+
+let _importedSiswaRows = [];
+
+function showModalImportSiswa() {
+  _importedSiswaRows = [];
+  const fileInput = document.getElementById("input-file-excel-siswa");
+  if (fileInput) fileInput.value = "";
+  const previewWrapper = document.getElementById("import-siswa-preview-wrapper");
+  if (previewWrapper) previewWrapper.style.display = "none";
+  const progressBox = document.getElementById("import-siswa-progress");
+  if (progressBox) progressBox.style.display = "none";
+  const summaryBox = document.getElementById("import-siswa-summary");
+  if (summaryBox) {
+    summaryBox.innerHTML = "";
+    summaryBox.style.display = "none";
+  }
+  const btnKonfirmasi = document.getElementById("btn-konfirmasi-import-siswa");
+  if (btnKonfirmasi) btnKonfirmasi.style.display = "none";
+
+  const modal = document.getElementById("modal-import-siswa");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function tutupModalImportSiswa() {
+  const modal = document.getElementById("modal-import-siswa");
+  if (modal) modal.classList.add("hidden");
+}
+
+function downloadTemplateImportSiswa() {
+  if (typeof XLSX === "undefined") {
+    Router.toast("Library SheetJS belum termuat. Coba refresh halaman.");
+    return;
+  }
+
+  const contoh = [
+    {
+      "Nama": "Ahmad Dani",
+      "NIS": "2026001",
+      "Kelas": "SD 1A",
+      "Jenis Kelamin": "L",
+      "Tahun Masuk": 2026,
+    },
+    {
+      "Nama": "Siti Nurhaliza",
+      "NIS": "2026002",
+      "Kelas": "SD 1B",
+      "Jenis Kelamin": "P",
+      "Tahun Masuk": 2026,
+    },
+    {
+      "Nama": "Kevin Pratama",
+      "NIS": "2026003",
+      "Kelas": "SMP 1A",
+      "Jenis Kelamin": "L",
+      "Tahun Masuk": 2026,
+    },
+  ];
+
+  const ws = XLSX.utils.json_to_sheet(contoh, {
+    header: ["Nama", "NIS", "Kelas", "Jenis Kelamin", "Tahun Masuk"],
+  });
+  ws["!cols"] = [
+    { wch: 22 },
+    { wch: 14 },
+    { wch: 12 },
+    { wch: 15 },
+    { wch: 14 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Template Siswa");
+  XLSX.writeFile(wb, "template-siswa-charispay.xlsx");
+}
+
+function handleExcelSiswaFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (typeof XLSX === "undefined") {
+    Router.toast("Library SheetJS belum termuat.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    try {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheet];
+      const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+      if (!rawJson || rawJson.length === 0) {
+        Router.toast("File kosong atau format tidak sesuai.");
+        return;
+      }
+
+      processImportedSiswaData(rawJson);
+    } catch (err) {
+      console.error("Gagal membaca Excel:", err);
+      Router.toast("Format file gagal dibaca: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processImportedSiswaData(rows) {
+  const validList = typeof DAFTAR_KELAS !== "undefined" ? DAFTAR_KELAS : [];
+  _importedSiswaRows = [];
+
+  let validCount = 0;
+  let errorCount = 0;
+
+  const tableBody = document.getElementById("import-siswa-table-body");
+  if (!tableBody) return;
+  tableBody.innerHTML = "";
+
+  rows.forEach((row, idx) => {
+    // Normalisasi kolom
+    const nama = String(
+      row["Nama"] || row["nama"] || row["NAMA"] || row["Nama Siswa"] || "",
+    ).trim();
+    const nis = String(
+      row["NIS"] || row["nis"] || row["Nis"] || "",
+    ).trim();
+    const kelas = String(
+      row["Kelas"] || row["kelas"] || row["KELAS"] || "",
+    ).trim();
+
+    let jkRaw = String(
+      row["Jenis Kelamin"] ||
+        row["JenisKelamin"] ||
+        row["JK"] ||
+        row["jk"] ||
+        row["Gender"] ||
+        "",
+    ).trim().toUpperCase();
+
+    if (jkRaw === "LAKI-LAKI" || jkRaw === "PRIA" || jkRaw === "LAKILAKI")
+      jkRaw = "L";
+    if (jkRaw === "PEREMPUAN" || jkRaw === "WANITA") jkRaw = "P";
+
+    const tahunMasuk =
+      parseInt(
+        row["Tahun Masuk"] || row["TahunMasuk"] || row["Tahun"] || row["tahun"],
+      ) || new Date().getFullYear();
+
+    // Validasi
+    const errors = [];
+    if (!nama) errors.push("Nama wajib");
+    if (!nis) errors.push("NIS wajib");
+    if (!kelas || !validList.includes(kelas)) {
+      errors.push("Kelas tidak valid");
+    }
+    if (jkRaw !== "L" && jkRaw !== "P") {
+      errors.push("JK harus L atau P");
+    }
+
+    const isValid = errors.length === 0;
+    if (isValid) validCount++;
+    else errorCount++;
+
+    const item = {
+      no: idx + 1,
+      nama,
+      nis,
+      kelas,
+      jenisKelamin: jkRaw,
+      tahunMasuk,
+      isValid,
+      errors,
+    };
+    _importedSiswaRows.push(item);
+
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid var(--border-light)";
+    tr.style.background = isValid ? "#ffffff" : "#fff5f5";
+    tr.innerHTML = `
+      <td style="padding:6px 10px;font-weight:600">${idx + 1}</td>
+      <td style="padding:6px 10px;font-weight:600">${nama || '<span style="color:var(--danger)">(Kosong)</span>'}</td>
+      <td style="padding:6px 10px">${nis || '<span style="color:var(--danger)">(Kosong)</span>'}</td>
+      <td style="padding:6px 10px">${kelas || '<span style="color:var(--danger)">(Kosong)</span>'}</td>
+      <td style="padding:6px 10px">${jkRaw || "-"}</td>
+      <td style="padding:6px 10px">${tahunMasuk}</td>
+      <td style="padding:6px 10px">
+        ${
+          isValid
+            ? `<span class="badge badge-lunas" style="font-size:10.5px">Valid</span>`
+            : `<span class="badge badge-ditolak" style="font-size:10.5px" title="${errors.join(", ")}">${errors.join(", ")}</span>`
+        }
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  const statsEl = document.getElementById("import-siswa-stats");
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <span class="badge badge-lunas">${validCount} Baris Valid</span>
+      <span class="badge ${errorCount > 0 ? "badge-ditolak" : "badge-belum"}">${errorCount} Baris Error</span>
+    `;
+  }
+
+  const previewWrapper = document.getElementById("import-siswa-preview-wrapper");
+  if (previewWrapper) previewWrapper.style.display = "block";
+
+  const btnKonfirmasi = document.getElementById("btn-konfirmasi-import-siswa");
+  if (btnKonfirmasi) {
+    btnKonfirmasi.style.display = validCount > 0 ? "inline-flex" : "none";
+    btnKonfirmasi.textContent = `Konfirmasi Import (${validCount} Siswa)`;
+  }
+}
+
+async function konfirmasiImportSiswa() {
+  const validItems = _importedSiswaRows.filter((r) => r.isValid);
+  if (validItems.length === 0) {
+    Router.toast("Tidak ada baris data valid untuk diimport");
+    return;
+  }
+
+  const ok = await Helpers.confirm(
+    `Import ${validItems.length} data siswa valid ke database? Data dengan NIS yang sudah ada akan dilewati otomatis.`,
+  );
+  if (!ok) return;
+
+  Helpers.btnLoading("btn-konfirmasi-import-siswa", "Menyimpan...");
+  const progressBox = document.getElementById("import-siswa-progress");
+  const progressBar = document.getElementById("import-siswa-progress-bar");
+  const progressText = document.getElementById("import-siswa-progress-text");
+  const summaryBox = document.getElementById("import-siswa-summary");
+
+  if (progressBox) progressBox.style.display = "block";
+  if (summaryBox) summaryBox.style.display = "none";
+
+  try {
+    // 1. Ambil seluruh data siswa untuk cek duplikasi NIS
+    const snap = await db.collection("siswa").get();
+    const existingNisSet = new Set(
+      snap.docs.map((d) => String(d.data().nis || "").trim()),
+    );
+
+    let berhasil = 0;
+    let diSkip = 0;
+    let gagal = 0;
+
+    // Filter duplikat baik dengan Firestore maupun di dalam file sendiri
+    const toInsert = [];
+    const localNisSeen = new Set();
+
+    validItems.forEach((item) => {
+      if (existingNisSet.has(item.nis) || localNisSeen.has(item.nis)) {
+        diSkip++;
+      } else {
+        toInsert.push(item);
+        localNisSeen.add(item.nis);
+      }
+    });
+
+    // 2. Batch write ke Firestore (max 450 per batch)
+    const BATCH_SIZE = 450;
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const chunk = toInsert.slice(i, i + BATCH_SIZE);
+      const batch = db.batch();
+
+      chunk.forEach((s) => {
+        const docRef = db.collection("siswa").doc();
+        batch.set(docRef, {
+          nama: s.nama,
+          nis: s.nis,
+          kelas: s.kelas,
+          jk: s.jenisKelamin,
+          jenisKelamin: s.jenisKelamin,
+          tahunMasuk: s.tahunMasuk,
+          ortuId: "",
+          ortuNama: "",
+          ortuEmail: "",
+          ortuNoHp: "",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+
+      try {
+        await batch.commit();
+        berhasil += chunk.length;
+      } catch (batchErr) {
+        console.error("Batch error:", batchErr);
+        gagal += chunk.length;
+      }
+
+      if (progressBar && progressText) {
+        const pct = Math.round((berhasil / (toInsert.length || 1)) * 100);
+        progressBar.style.width = pct + "%";
+        progressText.textContent = `Menyimpan data... ${berhasil} dari ${toInsert.length} tersimpan`;
+      }
+    }
+
+    if (progressBox) progressBox.style.display = "none";
+
+    // 3. Tampilkan ringkasan
+    if (summaryBox) {
+      summaryBox.style.display = "block";
+      summaryBox.innerHTML = `
+        <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;padding:14px">
+          <div class="font-bold text-sm" style="color:var(--success-dark)">Proses Import Selesai</div>
+          <div class="text-xs text-secondary mt-4">
+            &bull; Berhasil disimpan: <strong>${berhasil} siswa</strong><br>
+            &bull; Dilewati / Duplikat NIS: <strong>${diSkip} siswa</strong><br>
+            &bull; Baris Gagal / Error: <strong>${gagal + (_importedSiswaRows.length - validItems.length)} baris</strong>
+          </div>
+        </div>
+      `;
+    }
+
+    Router.toast(
+      `Import selesai: Berhasil ${berhasil}, Di-skip ${diSkip}, Gagal ${gagal}`,
+    );
+    await loadDaftarSiswa();
+  } catch (err) {
+    console.error("Import error:", err);
+    Router.toast("Import gagal: " + err.message);
+  } finally {
+    Helpers.btnReset("btn-konfirmasi-import-siswa");
+  }
+}
+
+async function exportDataSiswaExcel() {
+  if (typeof XLSX === "undefined") {
+    Router.toast("Library SheetJS belum termuat. Periksa koneksi internet.");
+    return;
+  }
+
+  Router.toast("Menyiapkan data siswa...");
+  try {
+    const snap = await db.collection("siswa").orderBy("nama").get();
+    if (snap.empty) {
+      Router.toast("Belum ada data siswa untuk diexport");
+      return;
+    }
+
+    const rows = snap.docs.map((d) => {
+      const s = d.data();
+      const jk =
+        s.jenisKelamin || s.jk === "L"
+          ? "L"
+          : s.jk === "P"
+          ? "P"
+          : s.jenisKelamin || "-";
+      return {
+        "Nama": s.nama || "-",
+        "NIS": s.nis || "-",
+        "Kelas": s.kelas || "-",
+        "Jenis Kelamin": jk,
+        "Tahun Masuk": s.tahunMasuk || "-",
+        "Nama Ortu": s.ortuNama || "-",
+        "Email Ortu": s.ortuEmail || "-",
+        "No HP Ortu": s.ortuNoHp || s.nohp || "-",
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows, {
+      header: [
+        "Nama",
+        "NIS",
+        "Kelas",
+        "Jenis Kelamin",
+        "Tahun Masuk",
+        "Nama Ortu",
+        "Email Ortu",
+        "No HP Ortu",
+      ],
+    });
+
+    ws["!cols"] = [
+      { wch: 22 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 22 },
+      { wch: 26 },
+      { wch: 16 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data Siswa");
+    XLSX.writeFile(wb, "data-siswa.xlsx");
+    Router.toast("File data-siswa.xlsx berhasil diunduh");
+  } catch (err) {
+    console.error("Export Siswa error:", err);
+    Router.toast("Gagal export siswa: " + err.message);
   }
 }

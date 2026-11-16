@@ -422,6 +422,7 @@ async function kirimPembayaran(tagihanId) {
       kelas: tagihan.kelas || "",
       nis: tagihan.nis || "",
       periode: tagihan.periode,
+      jenisTagihan: tagihan.jenisTagihan || "SPP",
       nominal: tagihan.nominal,
       metode: "transfer",
       buktiUrl,

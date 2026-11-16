@@ -147,8 +147,9 @@ function renderRiwayatList() {
                 ${isLunas ? Icons.checkCircle : Icons.receipt}
               </div>
               <div class="bill-card-info">
-                <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
+                <div class="bill-card-title">${t.jenisTagihan || "SPP"} &bull; ${Helpers.periodeLabel(t.periode)}</div>
                 <div class="bill-card-meta">
+                  <span class="badge" style="background:#eff6ff;color:var(--primary);font-size:10px;padding:1px 6px;font-weight:700;border:1px solid #bfdbfe">${t.jenisTagihan || "SPP"}</span>
                   <span class="font-semibold" style="color:var(--text)">${t.namaSiswa || "Siswa"}</span>
                   ${t.kelas ? `<span>&bull;</span><span>${t.kelas}</span>` : ""}
                   <span>&bull;</span>
@@ -191,12 +192,16 @@ async function showDetailRiwayat(id) {
           <span>${Helpers.badge(t.status)}</span>
         </div>
         <div class="card-row">
+          <span class="card-label">Jenis Tagihan</span>
+          <span class="card-value font-bold" style="color:var(--primary)">${t.jenisTagihan || "SPP"}</span>
+        </div>
+        <div class="card-row">
           <span class="card-label">Siswa</span>
           <span class="card-value font-bold">${t.namaSiswa || "-"} (${t.kelas || "-"})</span>
         </div>
         <div class="card-row">
-          <span class="card-label">Periode SPP</span>
-          <span class="card-value">SPP ${Helpers.periodeLabel(t.periode)}</span>
+          <span class="card-label">Periode</span>
+          <span class="card-value">${Helpers.periodeLabel(t.periode)}</span>
         </div>
         <div class="card-row">
           <span class="card-label">Total Dibayar</span>
@@ -223,6 +228,16 @@ async function showDetailRiwayat(id) {
         }
 
         ${
+          t.status === "lunas"
+            ? `
+          <button class="btn btn-primary mt-14 w-full" onclick="downloadStrukPDF('${t.id}')">
+            ${Icons.receipt} Unduh Struk Bukti Pembayaran (PDF)
+          </button>
+        `
+            : ""
+        }
+
+        ${
           t.buktiUrl
             ? `
           <div style="margin:16px 0;text-align:center">
@@ -237,7 +252,7 @@ async function showDetailRiwayat(id) {
             : ""
         }
 
-        <button class="btn btn-secondary mt-16 w-full" onclick="document.getElementById('modal-riwayat-detail').remove()">
+        <button class="btn btn-secondary mt-12 w-full" onclick="document.getElementById('modal-riwayat-detail').remove()">
           Tutup
         </button>
       </div>
@@ -245,5 +260,220 @@ async function showDetailRiwayat(id) {
     document.body.appendChild(overlay);
   } catch (err) {
     console.error(err);
+  }
+}
+
+/* ============================================================
+   Download Struk PDF untuk Orang Tua (jsPDF)
+   ============================================================ */
+
+function getLogoDataUrl() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = function () {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (e) {
+        resolve(null);
+      }
+    };
+    img.onerror = function () {
+      resolve(null);
+    };
+    img.src = "img/logo.png";
+  });
+}
+
+async function downloadStrukPDF(transaksiId) {
+  if (typeof window.jspdf === "undefined" || !window.jspdf.jsPDF) {
+    Router.toast("Library PDF sedang dimuat. Silakan periksa koneksi internet.");
+    return;
+  }
+
+  Router.toast("Membuat dokumen struk pembayaran...");
+
+  try {
+    const docSnap = await db.collection("transaksi").doc(transaksiId).get();
+    if (!docSnap.exists) {
+      Router.toast("Data transaksi tidak ditemukan");
+      return;
+    }
+    const t = { id: docSnap.id, ...docSnap.data() };
+
+    const { jsPDF } = window.jspdf;
+    // Format A5 portrait: 148 mm x 210 mm
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a5",
+    });
+
+    // 1. Logo CharisPay
+    const logoDataUrl = await getLogoDataUrl();
+    if (logoDataUrl) {
+      try {
+        doc.addImage(logoDataUrl, "PNG", 14, 12, 16, 16);
+      } catch (e) {
+        console.warn("Logo addImage fallback:", e);
+      }
+    }
+
+    // 2. Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(37, 99, 235); // var(--primary)
+    doc.text("CHARISPAY", 33, 18);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Charis National Academy / Institute • Bukti Pembayaran Resmi", 33, 23);
+
+    // Garis Pemisah Header
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.4);
+    doc.line(14, 32, 134, 32);
+
+    // 3. Judul Struk
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.text("BUKTI PEMBAYARAN SPP", 74, 40, { align: "center" });
+
+    // Nomor Transaksi (8 karakter pertama ID Firestore)
+    const idTx = t.id.substring(0, 8).toUpperCase();
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Nomor Transaksi: #${idTx}`, 74, 44.5, { align: "center" });
+
+    // 4. Status LUNAS
+    doc.setFillColor(220, 252, 231);
+    doc.setDrawColor(187, 247, 208);
+    doc.roundedRect(52, 48, 44, 7, 2, 2, "FD");
+    doc.setTextColor(22, 163, 74);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.text("STATUS: LUNAS", 74, 52.8, { align: "center" });
+
+    // 5. Kotak Detail Transaksi
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(14, 59, 120, 68, 3, 3, "FD");
+
+    const tglBayar =
+      t.tanggal || (t.createdAt ? Helpers.tanggal(t.createdAt) : "-");
+    const metode =
+      t.metode === "tunai" ? "Tunai di Sekolah" : "Transfer Bank BCA";
+    const jenisTagihan = t.jenisTagihan || "SPP";
+
+    const fields = [
+      ["Nama Siswa", t.namaSiswa || "-"],
+      ["NIS", t.nis || "-"],
+      ["Kelas", t.kelas || "-"],
+      ["Jenis Tagihan", jenisTagihan],
+      ["Periode", Helpers.periodeLabel(t.periode)],
+      ["Metode Bayar", metode],
+      ["Tanggal Bayar", tglBayar],
+    ];
+
+    let startY = 67;
+    fields.forEach(([label, val]) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(label, 20, startY);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(15, 23, 42);
+      doc.text(String(val), 128, startY, { align: "right" });
+
+      doc.setDrawColor(241, 245, 249);
+      doc.line(20, startY + 2, 128, startY + 2);
+
+      startY += 8;
+    });
+
+    // 6. Kotak Total Nominal
+    doc.setFillColor(239, 246, 255);
+    doc.setDrawColor(191, 219, 254);
+    doc.roundedRect(14, 132, 120, 14, 2, 2, "FD");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30, 58, 138);
+    doc.text("Total Pembayaran Lunas:", 19, 141);
+    doc.text(Helpers.rupiah(t.nominal), 128, 141, { align: "right" });
+
+    // 7. Area Tanda Tangan & Verifikasi Digital Admin
+    const adminVerif =
+      t.verifiedByNama ||
+      (Auth.profile && Auth.profile.nama) ||
+      "Petugas Keuangan CharisPay";
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Diverifikasi Resmi Oleh:", 100, 153, { align: "center" });
+
+    // Stempel Digital
+    doc.setDrawColor(37, 99, 235);
+    doc.setFillColor(240, 246, 255);
+    doc.roundedRect(77, 156, 46, 17, 2, 2, "FD");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(37, 99, 235);
+    doc.text("VERIFIKASI DIGITAL", 100, 161.5, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    doc.setTextColor(100, 116, 139);
+    doc.text("CHARISPAY SYSTEM", 100, 165.5, { align: "center" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.setTextColor(16, 185, 129);
+    doc.text("VALID & VERIFIED", 100, 170, { align: "center" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(adminVerif, 100, 179, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Bagian Administrasi & Keuangan", 100, 183, { align: "center" });
+
+    // 8. Footer Catatan
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      "Kwitansi ini adalah bukti pembayaran elektronik yang sah diterbitkan oleh CharisPay.",
+      74,
+      198,
+      { align: "center" },
+    );
+
+    // 9. Simpan File sebagai struk-[namaSiswa]-[periode].pdf
+    const namaSiswaClean = (t.namaSiswa || "siswa")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-");
+    const periodeClean = (t.periode || "periode").replace(/[^a-z0-9]/g, "-");
+    const filename = `struk-${namaSiswaClean}-${periodeClean}.pdf`;
+
+    doc.save(filename);
+    Router.toast(`Struk berhasil diunduh: ${filename}`);
+  } catch (err) {
+    console.error("Download struk PDF error:", err);
+    Router.toast("Gagal mengunduh struk: " + err.message);
   }
 }
