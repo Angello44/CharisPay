@@ -62,7 +62,10 @@ Router.register("register", {
                                 ${Icons.eye}
                             </span>
                         </div>
-                        <div class="form-hint">Minimal 6 karakter, campuran huruf dan angka lebih aman</div>
+                        <div class="form-hint" style="display:flex;align-items:center;justify-content:space-between">
+                            <span>Minimal 6 karakter, campuran huruf dan angka lebih aman</span>
+                            <span id="password-len-counter" style="font-weight:600;font-size:11px;color:var(--text-muted)"></span>
+                        </div>
                     </div>
 
                     <!-- Konfirmasi Password -->
@@ -78,6 +81,18 @@ Router.register("register", {
                                   style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-secondary);display:flex;align-items:center">
                                 ${Icons.eye}
                             </span>
+                        </div>
+                        <!-- Progress & Indikator Kecocokan Password Realtime -->
+                        <div id="pw-match-wrapper" class="pw-match-wrapper">
+                            <div class="pw-progress-track">
+                                <div id="pw-progress-bar" class="pw-progress-bar"></div>
+                            </div>
+                            <div class="pw-match-meta">
+                                <span id="pw-match-status" class="pw-match-status">
+                                    Ketik ulang password untuk memeriksa kecocokan
+                                </span>
+                                <span id="pw-match-badge" class="pw-match-badge">0%</span>
+                            </div>
                         </div>
                     </div>
 
@@ -103,6 +118,136 @@ Router.register("register", {
   init() {
     const form = document.getElementById("register-form");
     const errorEl = document.getElementById("register-error");
+    const p1Input = document.getElementById("password");
+    const p2Input = document.getElementById("konfirmasi-password");
+    const bar = document.getElementById("pw-progress-bar");
+    const statusEl = document.getElementById("pw-match-status");
+    const badgeEl = document.getElementById("pw-match-badge");
+    const lenCounter = document.getElementById("password-len-counter");
+
+    // Realtime progress validator untuk Password 2 (Konfirmasi Password)
+    const updatePasswordMatchProgress = () => {
+      if (!p1Input || !p2Input || !bar || !statusEl || !badgeEl) return;
+
+      const p1 = p1Input.value;
+      const p2 = p2Input.value;
+
+      // Update counter panjang password pertama
+      if (lenCounter) {
+        if (p1.length > 0) {
+          lenCounter.textContent = `${p1.length} karakter`;
+          lenCounter.style.color =
+            p1.length >= 6 ? "var(--success)" : "var(--warning-dark)";
+        } else {
+          lenCounter.textContent = "";
+        }
+      }
+
+      // Reset style kelas
+      bar.className = "pw-progress-bar";
+      badgeEl.className = "pw-match-badge";
+
+      // Kondisi 1: Kolom konfirmasi password masih kosong
+      if (p2.length === 0) {
+        p2Input.style.borderColor = "";
+        p2Input.style.boxShadow = "";
+        bar.style.width = "0%";
+        if (p1.length === 0) {
+          statusEl.innerHTML = "Ketik ulang password untuk memeriksa kecocokan";
+          statusEl.style.color = "var(--text-secondary)";
+          badgeEl.textContent = "0%";
+        } else {
+          statusEl.innerHTML = "Ketik ulang password Anda persis seperti di atas";
+          statusEl.style.color = "var(--text-secondary)";
+          badgeEl.textContent = "0%";
+        }
+        return;
+      }
+
+      // Kondisi 2: Password pertama belum diisi sama sekali
+      if (p1.length === 0) {
+        bar.style.width = "100%";
+        bar.classList.add("is-warning");
+        badgeEl.classList.add("badge-match-warning");
+        p2Input.style.borderColor = "var(--warning)";
+        p2Input.style.boxShadow = "0 0 0 3px rgba(245, 158, 11, 0.15)";
+        statusEl.innerHTML = `<span style="color:var(--warning-dark);display:inline-flex;align-items:center;gap:4px">${Icons.alertCircle} Isi password pertama terlebih dahulu</span>`;
+        badgeEl.textContent = "Isi Password 1";
+        return;
+      }
+
+      // Kondisi 3: Password pertama masih kurang dari 6 karakter
+      if (p1.length < 6) {
+        const ratio = Math.min(100, Math.round((p2.length / 6) * 100));
+        bar.style.width = `${ratio}%`;
+        bar.classList.add("is-warning");
+        badgeEl.classList.add("badge-match-warning");
+        p2Input.style.borderColor = "var(--warning)";
+        p2Input.style.boxShadow = "0 0 0 3px rgba(245, 158, 11, 0.15)";
+        statusEl.innerHTML = `<span style="color:var(--warning-dark);display:inline-flex;align-items:center;gap:4px">${Icons.alertCircle} Password pertama minimal 6 karakter</span>`;
+        badgeEl.textContent = "Minimal 6 Karakter";
+        return;
+      }
+
+      // Kondisi 4: Cocok sempurna 100%
+      if (p1 === p2) {
+        bar.style.width = "100%";
+        bar.classList.add("is-success");
+        badgeEl.classList.add("badge-match-success");
+        p2Input.style.borderColor = "var(--success)";
+        p2Input.style.boxShadow = "0 0 0 3px rgba(16, 185, 129, 0.15)";
+        statusEl.innerHTML = `<span style="color:var(--success-dark);display:inline-flex;align-items:center;gap:4px">${Icons.checkCircle} <strong>Password cocok sempurna!</strong></span>`;
+        badgeEl.textContent = "100% Cocok";
+        return;
+      }
+
+      // Kondisi 5: Sedang mengetik dan karakter yang diketik cocok sejauh ini (prefix match)
+      const isPrefixMatch = p1.startsWith(p2);
+
+      if (isPrefixMatch && p2.length < p1.length) {
+        const percent = Math.round((p2.length / p1.length) * 100);
+        bar.style.width = `${percent}%`;
+        bar.classList.add("is-matching");
+        badgeEl.classList.add("badge-match-primary");
+        p2Input.style.borderColor = "var(--primary)";
+        p2Input.style.boxShadow = "0 0 0 3px rgba(37, 99, 235, 0.15)";
+        statusEl.innerHTML = `<span style="color:var(--primary);display:inline-flex;align-items:center;gap:4px">${Icons.check} Karakter cocok sejauh ini (${p2.length}/${p1.length})</span>`;
+        badgeEl.textContent = `${percent}% Cocok`;
+        return;
+      }
+
+      // Kondisi 6: Tidak cocok (salah ketik pada karakter tertentu atau panjang berlebih)
+      let matchedCount = 0;
+      while (
+        matchedCount < p2.length &&
+        matchedCount < p1.length &&
+        p1[matchedCount] === p2[matchedCount]
+      ) {
+        matchedCount++;
+      }
+
+      const failPercent = Math.min(
+        100,
+        Math.round((p2.length / p1.length) * 100),
+      );
+      bar.style.width = `${Math.max(20, failPercent)}%`;
+      bar.classList.add("is-mismatch");
+      badgeEl.classList.add("badge-match-danger");
+      p2Input.style.borderColor = "var(--danger)";
+      p2Input.style.boxShadow = "0 0 0 3px rgba(239, 68, 68, 0.15)";
+
+      if (p2.length > p1.length) {
+        statusEl.innerHTML = `<span style="color:var(--danger);display:inline-flex;align-items:center;gap:4px">${Icons.cross} Password lebih panjang (${p2.length} kar vs ${p1.length} kar)</span>`;
+        badgeEl.textContent = "Karakter Berlebih";
+      } else {
+        const mismatchPos = matchedCount + 1;
+        statusEl.innerHTML = `<span style="color:var(--danger);display:inline-flex;align-items:center;gap:4px">${Icons.cross} Karakter ke-${mismatchPos} tidak cocok</span>`;
+        badgeEl.textContent = "Tidak Cocok";
+      }
+    };
+
+    if (p1Input) p1Input.addEventListener("input", updatePasswordMatchProgress);
+    if (p2Input) p2Input.addEventListener("input", updatePasswordMatchProgress);
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -212,5 +357,17 @@ Router.register("register", {
   },
 });
 
-/** Toggle tampil/sembunyikan password (shared dengan login.js) */
-// Sudah didefinisikan di login.js — tidak perlu didefinisikan ulang
+/** Toggle tampil/sembunyikan password */
+if (typeof window.togglePassword === "undefined") {
+  window.togglePassword = function (inputId, iconEl) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === "password") {
+      input.type = "text";
+      if (iconEl) iconEl.innerHTML = Icons.eyeOff;
+    } else {
+      input.type = "password";
+      if (iconEl) iconEl.innerHTML = Icons.eye;
+    }
+  };
+}

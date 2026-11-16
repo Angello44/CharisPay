@@ -3609,4 +3609,106 @@ body {
   }
 }
 
+/* ---------- Realtime Password Match Progress (Register) ---------- */
+.pw-match-wrapper {
+  margin-top: 8px;
+  transition: all 0.25s ease;
+}
+
+.pw-progress-track {
+  width: 100%;
+  height: 6px;
+  background-color: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pw-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease;
+  background-color: var(--primary);
+}
+
+.pw-progress-bar.is-matching {
+  background-color: var(--primary);
+}
+
+.pw-progress-bar.is-success {
+  background-color: var(--success);
+}
+
+.pw-progress-bar.is-mismatch {
+  background-color: var(--danger);
+}
+
+.pw-progress-bar.is-warning {
+  background-color: var(--warning);
+}
+
+.pw-match-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  min-height: 20px;
+}
+
+.pw-match-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color 0.2s ease;
+  word-break: break-word;
+}
+
+.pw-match-status .app-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.pw-match-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #f1f5f9;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.pw-match-badge.badge-match-success {
+  background: var(--success-light);
+  color: var(--success-dark);
+  border: 1px solid var(--success-border);
+}
+
+.pw-match-badge.badge-match-danger {
+  background: var(--danger-light);
+  color: var(--danger-dark);
+  border: 1px solid var(--danger-border);
+}
+
+.pw-match-badge.badge-match-primary {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary-soft);
+}
+
+.pw-match-badge.badge-match-warning {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+  border: 1px solid var(--warning-border);
+}
+
+
 
