@@ -58,11 +58,19 @@ async function loadLaporan() {
     // Hitung statistik
     const counts = { belum: 0, menunggu: 0, lunas: 0, revisi: 0, ditolak: 0 };
     let totalTagihan = 0;
+    let totalPotonganSponsor = 0;
+    const siswaSponsorSet = new Set();
+
     tagihanSnap.docs.forEach((d) => {
       const t = d.data();
       totalTagihan += t.nominal || 0;
       if (counts[t.status] !== undefined) counts[t.status]++;
+      if (t.potonganSponsor && t.potonganSponsor > 0) {
+        totalPotonganSponsor += t.potonganSponsor;
+        if (t.siswaId) siswaSponsorSet.add(t.siswaId);
+      }
     });
+    const jumlahSiswaSponsor = siswaSponsorSet.size;
 
     let totalTerkumpul = 0;
     let totalTunai = 0;
@@ -174,6 +182,14 @@ async function loadLaporan() {
                 <div class="card-row">
                     <span class="card-label">Persentase Lunas</span>
                     <span class="badge badge-lunas">${persen}% Lunas</span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Total Potongan Sponsor</span>
+                    <span class="card-value font-semibold" style="color:var(--success)">${Helpers.rupiah(totalPotonganSponsor)}</span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Jumlah Siswa Dapat Sponsor</span>
+                    <span class="card-value font-semibold">${jumlahSiswaSponsor} Siswa</span>
                 </div>
             </div>
 

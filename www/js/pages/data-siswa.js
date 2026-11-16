@@ -68,6 +68,20 @@ Router.register("data-siswa", {
             </div>
 
             <div class="form-group">
+              <label>Status SPP</label>
+              <select id="siswa-status-spp" onchange="onStatusSPPChange()" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14.5px;outline:none;background:#fff">
+                <option value="reguler">Reguler</option>
+                <option value="sponsor">Sponsor</option>
+              </select>
+            </div>
+
+            <div class="form-group hidden" id="group-potongan-sponsor">
+              <label>Potongan Sponsor (Rp)</label>
+              <input type="number" id="siswa-potongan-sponsor" placeholder="cth: 100000" min="0" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14.5px;outline:none;background:#fff">
+              <div class="form-hint" style="margin-top:4px;font-size:12px;color:var(--text-secondary)">Jumlah yang ditanggung sponsor per tagihan</div>
+            </div>
+
+            <div class="form-group">
               <label>Kelas</label>
               <div class="custom-select-box" id="box-siswa-kelas" onclick="ClassPicker.open('siswa-kelas', onKelasChange)">
                 <span id="text-siswa-kelas" class="placeholder">-- Pilih Kelas --</span>
@@ -248,6 +262,9 @@ function renderDaftarSiswa(list) {
       const ortuBadge = s.ortuNama
         ? `<span class="badge-soft badge-soft-success">Wali: ${s.ortuNama}</span>`
         : `<span class="badge-soft badge-soft-warning">Belum terhubung ortu</span>`;
+      const sponsorBadge = s.statusSPP === "sponsor"
+        ? `<div style="margin-top:3px"><span class="badge" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700;display:inline-block">🎓 Sponsor</span></div>`
+        : "";
 
       return `
       <div class="siswa-card">
@@ -257,6 +274,7 @@ function renderDaftarSiswa(list) {
             <div style="font-weight:700;font-size:14.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
               ${s.nama}
             </div>
+            ${sponsorBadge}
             <div style="font-size:12px;color:var(--text-secondary);margin:2px 0 4px">
               NIS: <strong>${s.nis || "-"}</strong> &middot; Kelas: <span class="badge-kelas">${s.kelas || "-"}</span>
             </div>
@@ -310,12 +328,35 @@ function pilihJK(jk) {
   }
 }
 
+function onStatusSPPChange() {
+  const statusEl = document.getElementById("siswa-status-spp");
+  const groupPotongan = document.getElementById("group-potongan-sponsor");
+  const potonganEl = document.getElementById("siswa-potongan-sponsor");
+  if (!statusEl || !groupPotongan) return;
+
+  if (statusEl.value === "sponsor") {
+    groupPotongan.classList.remove("hidden");
+  } else {
+    groupPotongan.classList.add("hidden");
+    if (potonganEl) potonganEl.value = "0";
+  }
+}
+
 function showFormSiswa(data = null) {
   document.getElementById("siswa-nama").value = data ? data.nama : "";
   document.getElementById("siswa-nis").value = data ? data.nis || "" : "";
   ClassPicker.setValue("siswa-kelas", data ? data.kelas || "" : "");
   pilihJK(data ? data.jk || "" : "");
   document.getElementById("siswa-tahun").value = data ? data.tahunMasuk || "" : "";
+
+  const statusVal = data ? data.statusSPP || "reguler" : "reguler";
+  const potonganVal = data ? data.potonganSponsor || 0 : 0;
+  const statusEl = document.getElementById("siswa-status-spp");
+  const potonganEl = document.getElementById("siswa-potongan-sponsor");
+  if (statusEl) statusEl.value = statusVal;
+  if (potonganEl) potonganEl.value = potonganVal > 0 ? potonganVal : (statusVal === "sponsor" ? "" : "0");
+  onStatusSPPChange();
+
   document.getElementById("siswa-ortu-email").value = data ? data.ortuEmail || "" : "";
   document.getElementById("siswa-ortu-id").value = data ? data.ortuId || "" : "";
   document.getElementById("siswa-ortu-nama").value = data ? data.ortuNama || "" : "";
@@ -497,12 +538,18 @@ async function simpanSiswa() {
     }
   }
 
+  const statusSPP = (document.getElementById("siswa-status-spp")?.value) || "reguler";
+  const potonganVal = document.getElementById("siswa-potongan-sponsor")?.value;
+  const potonganSponsor = statusSPP === "sponsor" ? Math.max(0, parseInt(potonganVal, 10) || 0) : 0;
+
   const data = {
     nama,
     nis,
     kelas,
     jk,
     tahunMasuk: tahunMasuk ? parseInt(tahunMasuk) : null,
+    statusSPP,
+    potonganSponsor,
     // Relasi ortu — kosong string kalau tidak ada
     ortuId: finalOrtuId,
     ortuNama: finalOrtuNama,
@@ -890,6 +937,8 @@ async function konfirmasiImportSiswa() {
           jk: s.jenisKelamin,
           jenisKelamin: s.jenisKelamin,
           tahunMasuk: s.tahunMasuk,
+          statusSPP: "reguler",
+          potonganSponsor: 0,
           ortuId: "",
           ortuNama: "",
           ortuEmail: "",

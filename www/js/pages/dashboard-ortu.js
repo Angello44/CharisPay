@@ -556,7 +556,7 @@ function renderTagihanTerkini(tagihan) {
               ${icon}
             </div>
             <div class="bill-card-info">
-              <div class="bill-card-title">SPP ${Helpers.periodeLabel(t.periode)}</div>
+              <div class="bill-card-title">${t.jenisTagihan || "SPP"} ${Helpers.periodeLabel(t.periode)}</div>
               <div class="bill-card-meta">
                 <span class="font-semibold" style="color:var(--text)">${t.namaSiswa || "Siswa"}</span>
                 ${t.kelas ? `<span>&bull;</span><span>${t.kelas}</span>` : ""}
@@ -565,7 +565,10 @@ function renderTagihanTerkini(tagihan) {
             </div>
           </div>
           <div class="bill-card-right">
-            <div class="bill-card-amount">${Helpers.rupiah(t.nominal)}</div>
+            <div class="bill-card-amount" style="display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap">
+              <span>${Helpers.rupiah(t.nominal)}</span>
+              ${t.potonganSponsor > 0 ? `<span class="badge" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700">🎓 Sponsor</span>` : ""}
+            </div>
             ${Helpers.badge(t.status)}
           </div>
         </div>

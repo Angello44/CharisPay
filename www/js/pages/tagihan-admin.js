@@ -148,9 +148,10 @@ Router.register("tagihan-admin", {
 
                     <div class="form-group">
                         <label>Siswa <span style="color:var(--danger)">*</span></label>
-                        <select id="tagihan-siswa-id">
+                        <select id="tagihan-siswa-id" onchange="onSiswaTagihanChange()">
                             <option value="">-- Pilih Siswa --</option>
                         </select>
+                        <div id="info-sponsor-siswa" style="display:none;margin-top:6px;font-size:12.5px;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;padding:6px 10px;border-radius:6px;font-weight:600"></div>
                     </div>
                     <div class="form-group">
                         <label>Jenis Tagihan <span style="color:var(--danger)">*</span></label>
@@ -636,6 +637,11 @@ async function buatTagihanBulk() {
 
     chunk.forEach((siswa) => {
       const docRef = db.collection("tagihan").doc(); // auto ID
+      const nominalAsli = parseInt(nominal, 10) || 0;
+      const isSponsor = siswa.statusSPP === "sponsor";
+      const potonganSponsor = isSponsor ? (parseInt(siswa.potonganSponsor, 10) || 0) : 0;
+      const nominalAkhir = Math.max(0, nominalAsli - potonganSponsor);
+
       batch.set(docRef, {
         siswaId: siswa.id,
         namaSiswa: siswa.nama,
@@ -645,7 +651,9 @@ async function buatTagihanBulk() {
         ortuNama: siswa.ortuNama || "",
         periode,
         jenisTagihan,
-        nominal: parseInt(nominal),
+        nominal: nominalAkhir,
+        nominalAsli: nominalAsli,
+        potonganSponsor: potonganSponsor,
         jatuhTempo,
         keterangan: keterangan || `${jenisTagihan} ${Helpers.periodeLabel(periode)}`,
         status: "belum",
@@ -690,8 +698,14 @@ async function showFormTagihan() {
   select.innerHTML = '<option value="">-- Pilih Siswa --</option>';
   snap.docs.forEach((doc) => {
     const s = doc.data();
-    select.innerHTML += `<option value="${doc.id}" data-nama="${s.nama}" data-kelas="${s.kelas || ""}" data-nis="${s.nis || ""}" data-ortuid="${s.ortuId || ""}" data-ortunama="${s.ortuNama || ""}">${s.nama} (${s.kelas || "-"})</option>`;
+    select.innerHTML += `<option value="${doc.id}" data-nama="${s.nama}" data-kelas="${s.kelas || ""}" data-nis="${s.nis || ""}" data-ortuid="${s.ortuId || ""}" data-ortunama="${s.ortuNama || ""}" data-statusspp="${s.statusSPP || "reguler"}" data-potongan="${s.potonganSponsor || 0}">${s.nama} (${s.kelas || "-"})</option>`;
   });
+
+  const infoEl = document.getElementById("info-sponsor-siswa");
+  if (infoEl) {
+    infoEl.style.display = "none";
+    infoEl.textContent = "";
+  }
 
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("tagihan-jatuh-tempo").value = today;
@@ -700,6 +714,27 @@ async function showFormTagihan() {
   }
   document.getElementById("tagihan-form-error").textContent = "";
   document.getElementById("modal-tagihan").classList.remove("hidden");
+}
+
+function onSiswaTagihanChange() {
+  const select = document.getElementById("tagihan-siswa-id");
+  const infoEl = document.getElementById("info-sponsor-siswa");
+  if (!select || !infoEl) return;
+  const opt = select.options[select.selectedIndex];
+  if (!opt || !opt.value) {
+    infoEl.style.display = "none";
+    infoEl.textContent = "";
+    return;
+  }
+  const statusSPP = opt.dataset.statusspp;
+  const potongan = parseInt(opt.dataset.potongan, 10) || 0;
+  if (statusSPP === "sponsor") {
+    infoEl.style.display = "block";
+    infoEl.textContent = `🎓 Siswa ini mendapat potongan sponsor Rp ${potongan.toLocaleString("id-ID")}`;
+  } else {
+    infoEl.style.display = "none";
+    infoEl.textContent = "";
+  }
 }
 
 function tutupFormTagihan() {
@@ -759,6 +794,12 @@ async function simpanTagihan() {
   const ortuId = siswaOpt ? siswaOpt.dataset.ortuid : "";
   const ortuNama = siswaOpt ? siswaOpt.dataset.ortunama : "";
 
+  const nominalInput = parseInt(nominal, 10) || 0;
+  const statusSPP = siswaOpt ? siswaOpt.dataset.statusspp : "reguler";
+  const potonganSponsor = (statusSPP === "sponsor") ? (parseInt(siswaOpt ? siswaOpt.dataset.potongan : 0, 10) || 0) : 0;
+  const nominalAsli = nominalInput;
+  const nominalAkhir = Math.max(0, nominalAsli - potonganSponsor);
+
   Helpers.btnLoading("btn-simpan-tagihan", "Menyimpan...");
   try {
     await db.collection("tagihan").add({
@@ -770,7 +811,9 @@ async function simpanTagihan() {
       ortuNama: ortuNama || "",
       periode,
       jenisTagihan,
-      nominal: parseInt(nominal),
+      nominal: nominalAkhir,
+      nominalAsli: nominalAsli,
+      potonganSponsor: potonganSponsor,
       jatuhTempo,
       keterangan: keterangan || `${jenisTagihan} ${Helpers.periodeLabel(periode)}`,
       status: "belum",

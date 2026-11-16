@@ -133,8 +133,9 @@ Router.register("detail-tagihan", {
           </div>
 
           <div class="invoice-total-box">
-            <div class="invoice-total-label">Total Nominal Tagihan</div>
+            <div class="invoice-total-label">${t.potonganSponsor > 0 ? "Yang Dibayar" : "Total Nominal Tagihan"}</div>
             <div class="invoice-total-val">${Helpers.rupiah(t.nominal)}</div>
+            ${t.potonganSponsor > 0 ? `<div style="font-size:12px;color:var(--success);font-weight:700;margin-top:4px">🎓 Potongan Sponsor: ${Helpers.rupiah(t.potonganSponsor)}</div>` : ""}
           </div>
 
           <div class="card-row">
@@ -145,6 +146,24 @@ Router.register("detail-tagihan", {
             <span class="card-label">Periode Pembayaran</span>
             <span class="card-value">${Helpers.periodeLabel(t.periode)}</span>
           </div>
+          ${
+            t.potonganSponsor > 0
+              ? `
+          <div class="card-row">
+            <span class="card-label">Nominal Asli</span>
+            <span class="card-value">${Helpers.rupiah(t.nominalAsli || (t.nominal + t.potonganSponsor))}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Potongan Sponsor</span>
+            <span class="card-value" style="color:var(--success);font-weight:700">- ${Helpers.rupiah(t.potonganSponsor)}</span>
+          </div>
+          <div class="card-row" style="border-top:1px dashed var(--border);padding-top:10px;margin-top:4px">
+            <span class="card-label font-bold" style="font-size:14px;color:var(--text)">Yang Dibayar</span>
+            <span class="card-value font-bold" style="font-size:16px;color:var(--primary)">${Helpers.rupiah(t.nominal)}</span>
+          </div>
+          `
+              : ""
+          }
           <div class="card-row">
             <span class="card-label">Nama Siswa</span>
             <span class="card-value font-bold">${t.namaSiswa || "-"}</span>

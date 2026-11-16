@@ -287,6 +287,7 @@ function renderDaftarTagihanPerAnak() {
                 </div>
                 <div class="bill-card-right">
                   <div class="bill-card-amount">${Helpers.rupiah(t.nominal)}</div>
+                  ${t.potonganSponsor > 0 ? `<div style="font-size:11px;font-weight:600;color:var(--success);margin-top:1px;margin-bottom:2px">🎓 Sponsor aktif</div>` : ""}
                   ${Helpers.badge(t.status)}
                 </div>
               </div>
