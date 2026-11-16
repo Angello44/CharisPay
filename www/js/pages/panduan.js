@@ -28,11 +28,80 @@ Router.register("panduan", {
       <!-- Accordion List (In-Place Dropdown Cards) -->
       <div class="faq-accordion-list">
 
-        <!-- 1. Cara Melihat Tagihan SPP -->
+        <!-- 1. Cara Menghubungkan Data Anak (Siswa) -->
         <div class="faq-accordion-item open" id="faq-1">
           <div class="faq-accordion-header" onclick="toggleFaq('faq-1')">
             <div class="faq-header-left">
               <div class="faq-number-badge">1</div>
+              <div class="faq-icon-box qa-cyan">${Icons.students}</div>
+              <div class="faq-title">Cara Menghubungkan Data Anak</div>
+            </div>
+            <span class="faq-chevron">${Icons.chevronDown}</span>
+          </div>
+          <div class="faq-accordion-body">
+            <div class="faq-body-inner">
+              <p class="text-sm text-secondary mb-12">
+                Agar rincian tagihan SPP dan laporan nilai anak Anda muncul di aplikasi, terdapat 2 cara praktis untuk menghubungkan data:
+              </p>
+
+              <div style="font-weight:700;margin-bottom:8px;color:var(--text)">Opsi 1: Menghubungkan Mandiri dengan Nama atau NIS</div>
+              ${langkah([
+                {
+                  no: 1,
+                  teks: 'Buka halaman <strong>"Beranda"</strong>, lalu ketuk tombol <strong>"Hubungkan Anak"</strong> atau ikon <strong>"+"</strong> pada kartu informasi siswa.',
+                },
+                {
+                  no: 2,
+                  teks: "Masukkan <strong>Nama Lengkap Siswa</strong> atau <strong>NIS (Nomor Induk Siswa)</strong> sesuai data resmi yang terdaftar di sekolah.",
+                },
+                {
+                  no: 3,
+                  teks: 'Ketuk tombol <strong>"Cari"</strong> untuk memeriksa kecocokan data siswa di sistem sekolah.',
+                },
+                {
+                  no: 4,
+                  teks: 'Setelah data anak ditemukan (nama, kelas, dan NIS cocok), ketuk tombol <strong>"Hubungkan Siswa Ini"</strong>.',
+                },
+                {
+                  no: 5,
+                  teks: "Profil anak dan seluruh tagihan SPP akan otomatis terhubung ke akun Anda.",
+                },
+              ])}
+
+              <div style="font-weight:700;margin:16px 0 8px;color:var(--text)">Opsi 2: Dihubungkan Langsung oleh Admin Sekolah</div>
+              ${langkah([
+                {
+                  no: 1,
+                  teks: "Pastikan Anda telah mendaftar akun di aplikasi CharisPay menggunakan email aktif.",
+                },
+                {
+                  no: 2,
+                  teks: "Sampaikan email akun tersebut kepada petugas administrasi/keuangan sekolah.",
+                },
+                {
+                  no: 3,
+                  teks: "Petugas Admin akan memasukkan email Anda pada kolom data orang tua siswa.",
+                },
+                {
+                  no: 4,
+                  teks: "Saat Anda login kembali, profil anak otomatis langsung terhubung tanpa perlu pencarian.",
+                },
+              ])}
+
+              <button class="btn btn-primary btn-sm mt-12 w-full" onclick="Router.go('dashboard-ortu'); setTimeout(() => { if (typeof showModalTambahAnak === 'function') showModalTambahAnak(); }, 300);">
+                ${Icons.students} Buka Menu Hubungkan Anak Sekarang
+              </button>
+
+              ${tipBox("Mendukung Lebih dari 1 Anak", "Bagi orang tua yang memiliki lebih dari satu anak bersekolah di Charis Institute, Anda dapat menghubungkan seluruh data anak dalam 1 akun yang sama dengan mengulangi pencarian di atas.")}
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Cara Melihat Tagihan SPP -->
+        <div class="faq-accordion-item" id="faq-2">
+          <div class="faq-accordion-header" onclick="toggleFaq('faq-2')">
+            <div class="faq-header-left">
+              <div class="faq-number-badge">2</div>
               <div class="faq-icon-box qa-blue">${Icons.receipt}</div>
               <div class="faq-title">Cara Melihat Tagihan SPP</div>
             </div>
@@ -42,20 +111,29 @@ Router.register("panduan", {
             <div class="faq-body-inner">
               ${langkah([
                 { no: 1, teks: "Buka aplikasi SPP di ponsel Anda." },
-                { no: 2, teks: 'Pilih menu <strong>"Tagihan"</strong> pada bilah navigasi bawah.' },
-                { no: 3, teks: "Anda dapat melihat daftar seluruh tagihan per bulan, batas jatuh tempo, dan nominalnya." },
-                { no: 4, teks: "Ketuk salah satu tagihan untuk melihat rincian faktur lengkap." },
+                {
+                  no: 2,
+                  teks: 'Pilih menu <strong>"Tagihan"</strong> pada bilah navigasi bawah.',
+                },
+                {
+                  no: 3,
+                  teks: "Anda dapat melihat daftar seluruh tagihan per bulan, batas jatuh tempo, dan nominalnya.",
+                },
+                {
+                  no: 4,
+                  teks: "Ketuk salah satu tagihan untuk melihat rincian faktur lengkap.",
+                },
               ])}
               ${tipBox("Tips untuk Orang Tua", "Tagihan berwarna oranye menandakan belum dibayar. Tagihan berwarna hijau berarti telah lunas.")}
             </div>
           </div>
         </div>
 
-        <!-- 2. Cara Melakukan Pembayaran -->
-        <div class="faq-accordion-item" id="faq-2">
-          <div class="faq-accordion-header" onclick="toggleFaq('faq-2')">
+        <!-- 3. Cara Melakukan Pembayaran -->
+        <div class="faq-accordion-item" id="faq-3">
+          <div class="faq-accordion-header" onclick="toggleFaq('faq-3')">
             <div class="faq-header-left">
-              <div class="faq-number-badge">2</div>
+              <div class="faq-number-badge">3</div>
               <div class="faq-icon-box qa-indigo">${Icons.wallet}</div>
               <div class="faq-title">Cara Melakukan Pembayaran</div>
             </div>
@@ -67,27 +145,48 @@ Router.register("panduan", {
 
               <div style="font-weight:700;margin-bottom:8px;color:var(--text)">Pilihan 1: Transfer Bank BCA</div>
               ${langkah([
-                { no: 1, teks: 'Buka tagihan anak Anda, lalu klik tombol <strong>"Bayar Sekarang"</strong>.' },
-                { no: 2, teks: "Salin nomor rekening BCA sekolah dan nominal yang tertera." },
-                { no: 3, teks: "Buka m-Banking BCA atau ATM, lalu transfer sesuai nominal tepat." },
-                { no: 4, teks: "Simpan bukti transfer (struk atau screenshot)." },
-                { no: 5, teks: 'Upload bukti transfer tersebut, lalu klik <strong>"Kirim Bukti Pembayaran"</strong>.' },
+                {
+                  no: 1,
+                  teks: 'Buka tagihan anak Anda, lalu klik tombol <strong>"Bayar Sekarang"</strong>.',
+                },
+                {
+                  no: 2,
+                  teks: "Salin nomor rekening BCA sekolah dan nominal yang tertera.",
+                },
+                {
+                  no: 3,
+                  teks: "Buka m-Banking BCA atau ATM, lalu transfer sesuai nominal tepat.",
+                },
+                {
+                  no: 4,
+                  teks: "Simpan bukti transfer (struk atau screenshot).",
+                },
+                {
+                  no: 5,
+                  teks: 'Upload bukti transfer tersebut, lalu klik <strong>"Kirim Bukti Pembayaran"</strong>.',
+                },
               ])}
 
               <div style="font-weight:700;margin:16px 0 8px;color:var(--text)">Pilihan 2: Pembayaran Tunai di Sekolah</div>
               ${langkah([
-                { no: 1, teks: "Datang langsung ke loket Bagian Keuangan CharisPay." },
-                { no: 2, teks: "Lakukan pembayaran tunai ke kasir. Petugas akan mencatat dan memberikan kwitansi resmi." },
+                {
+                  no: 1,
+                  teks: "Datang langsung ke loket Bagian Keuangan CharisPay.",
+                },
+                {
+                  no: 2,
+                  teks: "Lakukan pembayaran tunai ke kasir. Petugas akan mencatat dan memberikan kwitansi resmi.",
+                },
               ])}
             </div>
           </div>
         </div>
 
-        <!-- 3. Cara Upload Bukti Transfer -->
-        <div class="faq-accordion-item" id="faq-3">
-          <div class="faq-accordion-header" onclick="toggleFaq('faq-3')">
+        <!-- 4. Cara Upload Bukti Transfer -->
+        <div class="faq-accordion-item" id="faq-4">
+          <div class="faq-accordion-header" onclick="toggleFaq('faq-4')">
             <div class="faq-header-left">
-              <div class="faq-number-badge">3</div>
+              <div class="faq-number-badge">4</div>
               <div class="faq-icon-box qa-emerald">${Icons.camera}</div>
               <div class="faq-title">Cara Upload Bukti Transfer</div>
             </div>
@@ -96,21 +195,33 @@ Router.register("panduan", {
           <div class="faq-accordion-body">
             <div class="faq-body-inner">
               ${langkah([
-                { no: 1, teks: "Pastikan foto bukti transfer atau screenshot struk jelas dan nominal terbaca." },
-                { no: 2, teks: 'Ketuk area <strong>"Pilih Foto Bukti Transfer"</strong> pada formulir.' },
-                { no: 3, teks: "Pilih foto dari Galeri HP Anda. Preview foto akan langsung muncul." },
-                { no: 4, teks: 'Ketuk <strong>"Kirim Bukti Pembayaran"</strong> dan tunggu hingga muncul notifikasi berhasil.' },
+                {
+                  no: 1,
+                  teks: "Pastikan foto bukti transfer atau screenshot struk jelas dan nominal terbaca.",
+                },
+                {
+                  no: 2,
+                  teks: 'Ketuk area <strong>"Pilih Foto Bukti Transfer"</strong> pada formulir.',
+                },
+                {
+                  no: 3,
+                  teks: "Pilih foto dari Galeri HP Anda. Preview foto akan langsung muncul.",
+                },
+                {
+                  no: 4,
+                  teks: 'Ketuk <strong>"Kirim Bukti Pembayaran"</strong> dan tunggu hingga muncul notifikasi berhasil.',
+                },
               ])}
               ${tipBox("Catatan Penting", "Ukuran foto maksimal 5MB. Format yang didukung: JPG, PNG, atau PDF.")}
             </div>
           </div>
         </div>
 
-        <!-- 4. Memahami Arti Status Tagihan -->
-        <div class="faq-accordion-item" id="faq-4">
-          <div class="faq-accordion-header" onclick="toggleFaq('faq-4')">
+        <!-- 5. Memahami Arti Status Tagihan -->
+        <div class="faq-accordion-item" id="faq-5">
+          <div class="faq-accordion-header" onclick="toggleFaq('faq-5')">
             <div class="faq-header-left">
-              <div class="faq-number-badge">4</div>
+              <div class="faq-number-badge">5</div>
               <div class="faq-icon-box qa-amber">${Icons.alertCircle}</div>
               <div class="faq-title">Memahami Arti Status Tagihan</div>
             </div>
@@ -129,11 +240,11 @@ Router.register("panduan", {
           </div>
         </div>
 
-        <!-- 5. Cara Memantau Nilai Rapor Anak -->
-        <div class="faq-accordion-item" id="faq-5">
-          <div class="faq-accordion-header" onclick="toggleFaq('faq-5')">
+        <!-- 6. Cara Memantau Nilai Rapor Anak -->
+        <div class="faq-accordion-item" id="faq-6">
+          <div class="faq-accordion-header" onclick="toggleFaq('faq-6')">
             <div class="faq-header-left">
-              <div class="faq-number-badge">5</div>
+              <div class="faq-number-badge">6</div>
               <div class="faq-icon-box qa-purple">${Icons.grade}</div>
               <div class="faq-title">Cara Memantau Nilai Rapor Anak</div>
             </div>
@@ -142,51 +253,15 @@ Router.register("panduan", {
           <div class="faq-accordion-body">
             <div class="faq-body-inner">
               ${langkah([
-                { no: 1, teks: 'Pada Beranda aplikasi, ketuk menu <strong>"Nilai Rapor"</strong>.' },
-                { no: 2, teks: "Nilai rata-rata rapor anak dari kelas berjalan maupun kelas sebelumnya akan ditampilkan lengkap dengan predikat dan nama wali kelas." },
+                {
+                  no: 1,
+                  teks: 'Pada Beranda aplikasi, ketuk menu <strong>"Nilai Rapor"</strong>.',
+                },
+                {
+                  no: 2,
+                  teks: "Nilai rata-rata rapor anak dari kelas berjalan maupun kelas sebelumnya akan ditampilkan lengkap dengan predikat dan nama wali kelas.",
+                },
               ])}
-            </div>
-          </div>
-        </div>
-
-        <!-- 6. Cara Menghubungkan Data Anak (Siswa) -->
-        <div class="faq-accordion-item" id="faq-6">
-          <div class="faq-accordion-header" onclick="toggleFaq('faq-6')">
-            <div class="faq-header-left">
-              <div class="faq-number-badge">6</div>
-              <div class="faq-icon-box qa-cyan">${Icons.students}</div>
-              <div class="faq-title">Cara Menghubungkan Data Anak</div>
-            </div>
-            <span class="faq-chevron">${Icons.chevronDown}</span>
-          </div>
-          <div class="faq-accordion-body">
-            <div class="faq-body-inner">
-              <p class="text-sm text-secondary mb-12">
-                Agar rincian tagihan SPP dan laporan nilai anak Anda muncul di aplikasi, terdapat 2 cara praktis untuk menghubungkan data:
-              </p>
-
-              <div style="font-weight:700;margin-bottom:8px;color:var(--text)">Opsi 1: Menghubungkan Mandiri dengan Nama atau NIS</div>
-              ${langkah([
-                { no: 1, teks: 'Buka halaman <strong>"Beranda"</strong>, lalu ketuk tombol <strong>"Hubungkan Anak"</strong> atau ikon <strong>"+"</strong> pada kartu informasi siswa.' },
-                { no: 2, teks: "Masukkan <strong>Nama Lengkap Siswa</strong> atau <strong>NIS (Nomor Induk Siswa)</strong> sesuai data resmi yang terdaftar di sekolah." },
-                { no: 3, teks: 'Ketuk tombol <strong>"Cari"</strong> untuk memeriksa kecocokan data siswa di sistem sekolah.' },
-                { no: 4, teks: 'Setelah data anak ditemukan (nama, kelas, dan NIS cocok), ketuk tombol <strong>"Hubungkan Siswa Ini"</strong>.' },
-                { no: 5, teks: "Profil anak dan seluruh tagihan SPP akan otomatis terhubung ke akun Anda." },
-              ])}
-
-              <div style="font-weight:700;margin:16px 0 8px;color:var(--text)">Opsi 2: Dihubungkan Langsung oleh Admin Sekolah</div>
-              ${langkah([
-                { no: 1, teks: "Pastikan Anda telah mendaftar akun di aplikasi CharisPay menggunakan email aktif." },
-                { no: 2, teks: "Sampaikan email akun tersebut kepada petugas administrasi/keuangan sekolah." },
-                { no: 3, teks: "Petugas Admin akan memasukkan email Anda pada kolom data orang tua siswa." },
-                { no: 4, teks: "Saat Anda login kembali, profil anak otomatis langsung terhubung tanpa perlu pencarian." },
-              ])}
-
-              <button class="btn btn-primary btn-sm mt-12 w-full" onclick="Router.go('dashboard-ortu'); setTimeout(() => { if (typeof showModalTambahAnak === 'function') showModalTambahAnak(); }, 300);">
-                ${Icons.students} Buka Menu Hubungkan Anak Sekarang
-              </button>
-
-              ${tipBox("Mendukung Lebih dari 1 Anak", "Bagi orang tua yang memiliki lebih dari satu anak bersekolah di Charis Institute, Anda dapat menghubungkan seluruh data anak dalam 1 akun yang sama dengan mengulangi pencarian di atas.")}
             </div>
           </div>
         </div>
@@ -243,7 +318,7 @@ function langkah(steps) {
           <span class="text-sm" style="color:var(--text);line-height:1.45">${s.teks}</span>
         </div>
       </div>
-    `
+    `,
     )
     .join("");
 }
